@@ -1,6 +1,7 @@
 import type { LocalGame, SpeedMode } from '@slots/game-logic';
 import type { GameConfig } from '@slots/math-core';
 import { el } from '../core/dom';
+import { TIMINGS } from '../core/pace';
 import { money, STRINGS } from '../strings';
 
 /** Multiplier bar (feature 6): ladder steps with the current one lit. */
@@ -123,9 +124,17 @@ export class HudView {
   private spinIcon = HudView.arrowIcon();
   private spinAnim: Animation | null = null;
   private speed: SpeedMode = 'normal';
-  /** Arrow (and ring) turn faster in turbo and super turbo: one turn per 0.7 s / 0.4 s / 0.22 s. */
-  private static readonly ARROW_RATE: Record<SpeedMode, number> = { normal: 1, turbo: 1.75, super: 3.2 };
+  /**
+   * One turn of the arrow (and ring) = one reel of cards dropping in (first card falling
+   * plus the stagger to the last card), so the button spins in step with the board at
+   * every speed: 420 ms normal, 240 ms turbo, 150 ms super turbo.
+   */
+  private static turnMs(m: SpeedMode): number { const t = TIMINGS[m]; return t.cardFall + 3 * t.cardStagger; }
   private turboBtn: HTMLButtonElement;
+  private autoBtn: HTMLButtonElement;
+  readonly buyBtn: HTMLButtonElement;
+  /** Spins left while auto spin runs; the spin button turns into STOP. */
+  private autoCount = el('span.auto-count');
   private balance = el('span.bal-value');
   private roundId = el('span.round-id');
   readonly versionEl: HTMLElement;
@@ -138,17 +147,17 @@ export class HudView {
     this.header = el('div.header', {}, [
       el('div.fs-title', {}, [el('span.fs-label', { text: STRINGS.freeSpinsLeftLabel }), el('div.fs-count', {}, [this.fsLeft, this.fsTotal])]),
       el('div.logo', {}, [el('span.logo-main', { text: cfg().name.replace(/\s*\(.*\)\s*/, '').toUpperCase() }), el('span.logo-sub', { text: 'PROTOTYPE' })]),
-      el('button.buy-btn', { text: STRINGS.buyBonus, onclick: () => h.onBuy() }),
+      this.buyBtn = el('button.buy-btn', { text: STRINGS.buyBonus, onclick: () => h.onBuy() }) as HTMLButtonElement,
     ]);
     this.betBtn = el('button.ctl.bet-btn', { onclick: () => h.onBet() }) as HTMLButtonElement;
     this.spinBtn = el('button.spin-btn', { 'aria-label': STRINGS.spin, onclick: () => h.onSpin() },
-      [el('span.spin-ring'), el('span.spin-face'), el('span.spin-shine'), this.spinIcon]) as HTMLButtonElement;
+      [el('span.spin-ring'), el('span.spin-face'), el('span.spin-shine'), this.spinIcon, this.autoCount]) as HTMLButtonElement;
     this.turboBtn = el('button.ctl.turbo-btn', { onclick: () => h.onTurbo() }) as HTMLButtonElement;
     this.controls = el('div.controls', {}, [
       el('button.ctl', { onclick: () => h.onSettings() }, [el('span.ic', { text: '☰' }), el('span.lb', { text: 'MENU' })]),
       this.betBtn,
       this.spinBtn,
-      el('button.ctl', { onclick: () => h.onAuto() }, [el('span.ic', { text: '↻' }), el('span.lb', { text: STRINGS.auto })]),
+      this.autoBtn = el('button.ctl.auto-btn', { onclick: () => h.onAuto() }, [el('span.ic', { text: '↻' }), el('span.lb', { text: STRINGS.auto })]) as HTMLButtonElement,
       this.turboBtn,
     ]);
     this.soundBtn = el('button.sound-btn', { onclick: () => h.onSound() });
@@ -163,11 +172,27 @@ export class HudView {
       this.betBtn.replaceChildren(el('span.lb', { text: STRINGS.bet }), el('span.bet-val', { text: money(game.models.bet.bet) }));
     });
     game.models.spin.lastRoundId.subscribe(id => { this.roundId.textContent = id ? `#${id}` : ''; });
-    game.models.spin.phase.subscribe(p => {
-      this.spinBtn.classList.toggle('spinning', p !== 'idle');
-      this.rotateIcon(p !== 'idle');
-      this.spinBtn.disabled = p !== 'idle';
-      this.betBtn.disabled = p !== 'idle';
+    const auto = game.models.autoSpin;
+    const lock = () => {
+      const p = game.models.spin.phase.value;
+      const busy = p !== 'idle';
+      const running = auto.active.value;
+      this.spinBtn.classList.toggle('spinning', busy || running);
+      this.spinBtn.classList.toggle('auto', running);
+      this.rotateIcon(busy || running);
+      // Locked while a round animates, except during auto spin, where it is the STOP button.
+      this.spinBtn.disabled = busy && !running;
+      this.spinBtn.setAttribute('aria-label', running ? STRINGS.stop : STRINGS.spin);
+      this.betBtn.disabled = busy || running;
+      this.autoBtn.disabled = busy || running;
+      this.buyBtn.disabled = busy || running;
+    };
+    game.models.spin.phase.subscribe(lock);
+    auto.active.subscribe(lock);
+    auto.remaining.subscribe(n => {
+      const was = this.autoCount.textContent;
+      this.autoCount.textContent = auto.active.value ? (n === Infinity ? '∞' : String(n)) : '';
+      if (was && was !== this.autoCount.textContent) this.autoCount.animate([{ transform: 'scale(1.3)' }, { transform: 'none' }], { duration: 220 });
     });
     game.models.speed.mode.subscribe(m => this.showSpeed(m));
     this.mult.mode(false);
@@ -190,8 +215,8 @@ export class HudView {
   private rotateIcon(on: boolean): void {
     if (on) {
       if (this.spinAnim) return;
-      this.spinAnim = this.spinIcon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 700, iterations: Infinity });
-      this.spinAnim.playbackRate = HudView.ARROW_RATE[this.speed];
+      this.spinAnim = this.spinIcon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1000, iterations: Infinity });
+      this.spinAnim.playbackRate = 1000 / HudView.turnMs(this.speed);
       return;
     }
     const a = this.spinAnim;
@@ -208,7 +233,8 @@ export class HudView {
   /** ▷ normal, ▶ turbo, ▶▶ super turbo: the current speed is always visible on the button. */
   private showSpeed(m: SpeedMode): void {
     this.speed = m;
-    if (this.spinAnim) this.spinAnim.playbackRate = HudView.ARROW_RATE[m];
+    if (this.spinAnim) this.spinAnim.playbackRate = 1000 / HudView.turnMs(m);
+    this.spinBtn.style.setProperty('--turn', `${HudView.turnMs(m)}ms`);
     this.spinBtn.dataset.speed = m;
     this.turboBtn.dataset.mode = m;
     const icon = { normal: '▷', turbo: '▶', super: '▶▶' }[m];

@@ -12,7 +12,10 @@ import { HudView } from './views/hudView';
 import { Overlays } from './views/overlays';
 import { ReelsView } from './views/reelsView';
 import { WinnerNotice } from './views/winnerNotice';
+import { openAutoSpinWindow } from './windows/autoSpinWindow';
 import { openBetWindow } from './windows/betWindow';
+import { openBuyBonusWindow } from './windows/buyBonusWindow';
+import { LoadingScreen } from './windows/loadingScreen';
 import { Modal } from './windows/modal';
 import './styles.css';
 
@@ -52,10 +55,16 @@ let debugPanel: DebugPanel | null = null;
 const hud = new HudView(game, {
   onSpin: () => spinOrSkip(),
   onBet: () => openBetWindow(screen, game),
-  onAuto: () => overlays.toast(STRINGS.comingSoon('Auto spin')),
+  onAuto: () => {
+    if (models.spin.isBusy || models.autoSpin.active.value) return;
+    openAutoSpinWindow(screen, game, n => { void controllers.autoSpin.start(n); });
+  },
   onTurbo: () => overlays.toast(STRINGS.speedToast[controllers.speed.cycle()]),
   onSettings: () => overlays.toast(STRINGS.comingSoon('Settings and game rules')),
-  onBuy: () => overlays.toast(STRINGS.comingSoon('Buy Bonus window')),
+  onBuy: () => {
+    if (models.spin.isBusy || models.autoSpin.active.value) { overlays.toast(STRINGS.buyBusy); return; }
+    openBuyBonusWindow(screen, game, () => { void controllers.buyBonus.buy(1); });
+  },
   onVersionTap: () => { if (++versionTaps >= 5 && !debugPanel) location.search = '?debug=1'; },
   onSound: () => { audio.setMuted(!audio.muted); hud.showSound(audio.muted); },
 }, config.version);
@@ -71,11 +80,14 @@ screen.append(hud.top, hud.header, multWrap, reelFrame, hud.win.root, hud.contro
 
 function spinOrSkip(): void {
   if (Modal.isOpen) return;
-  if (models.spin.isBusy) return; // locked while the round animates (tap the reels to speed it up)
+  if (models.autoSpin.active.value) { controllers.autoSpin.stop(); return; } // spin button is STOP during auto
+  if (models.spin.isBusy) return; // locked while the round animates
   void controllers.spin.spinOnce();
 }
 
 bus.on('insufficientFunds', () => { hud.shakeBet(); overlays.toast(STRINGS.insufficient); });
+bus.on('autoSpinStopped', e => { if (e.reason !== 'finished') overlays.toast(STRINGS.autoStopped[e.reason]); });
+game.services.config.config.subscribe(c => { hud.buyBtn.hidden = !c.buyBonus.enabled; });
 bus.on('spinFailed', e => overlays.toast(e.message, 3000));
 game.services.config.config.subscribe(() => hud.mult.mode(document.body.classList.contains('fs')));
 
@@ -89,9 +101,13 @@ window.addEventListener('pointerdown', e => {
 }, true);
 
 // Tap the reels or press Space to spin / stop.
-reelFrame.addEventListener('pointerdown', () => { if (models.spin.isBusy) controllers.spin.skip(); });
+// Tap the board to spin. Taps while a round is animating are ignored (Josh, 2026-11-09).
+reelFrame.addEventListener('pointerdown', () => {
+  if (Modal.isOpen || models.spin.isBusy || models.autoSpin.active.value || loading) return;
+  void controllers.spin.spinOnce();
+});
 window.addEventListener('keydown', e => {
-  if (e.code === 'Space') { e.preventDefault(); audio.unlock(); spinOrSkip(); }
+  if (e.code === 'Space' && !loading) { e.preventDefault(); audio.unlock(); spinOrSkip(); }
 });
 
 if (debug) {
@@ -100,10 +116,22 @@ if (debug) {
   (window as unknown as { __game: unknown }).__game = game;
 }
 
-// Boot budget (< 5 s): record the time to the first playable frame.
+// Boot budget (< 5 s): __bootMs = first frame of the loading screen.
+// ?nointro skips the loading screen (automated tests); otherwise the game opens after Continue.
+let loading = !params.has('nointro');
 requestAnimationFrame(() => {
   const ms = Math.round(performance.now()); // since navigation start
   (window as unknown as { __bootMs: number }).__bootMs = ms;
-  document.body.dataset.ready = '1';
-  if (debug) console.info(`[boot] playable in ${ms} ms`);
+  if (debug) console.info(`[boot] first frame in ${ms} ms`);
+  const ready = () => { loading = false; document.body.dataset.ready = '1'; };
+  if (!loading) { ready(); return; }
+  const title = config.name.replace(/\s*\(.*\)\s*/, '').toUpperCase();
+  const vol = (config as unknown as { volatilityRating?: number }).volatilityRating ?? 3;
+  const frame = () => new Promise(r => requestAnimationFrame(r));
+  void new LoadingScreen(title, vol).run(screen, [
+    { label: 'fonts', run: () => document.fonts?.ready },
+    { label: 'symbols', run: frame },
+    { label: 'sounds', run: frame },
+    { label: 'config', run: () => game.services.config.config.value },
+  ]).then(ready);
 });
