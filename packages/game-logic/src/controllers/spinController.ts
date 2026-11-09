@@ -86,6 +86,9 @@ export class SpinController {
     this.spin.phase.set('presenting');
     try {
       await this.presenter.present(response, this.speed.mode.value);
+    } catch (err) {
+      // The round is already played and paid; a broken animation must not lose it or jam auto spin.
+      this.bus.publish('spinFailed', { message: `Playback failed: ${err instanceof Error ? err.message : String(err)}` });
     } finally {
       this.spin.lastWin.set(r.totalWin);
       this.wallet.balance.set(response.balanceAfter);
