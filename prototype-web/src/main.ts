@@ -6,6 +6,7 @@ import { el } from './core/dom';
 import { DebugPanel } from './debug/debugPanel';
 import { STRINGS } from './strings';
 import { PlaceholderTheme } from './theme/placeholderTheme';
+import type { Theme } from './theme/theme';
 import { FxLayer } from './views/fx';
 import { HtmlRoundPresenter } from './views/htmlRoundPresenter';
 import { HudView } from './views/hudView';
@@ -30,7 +31,8 @@ const seedParam = params.get('seed');
 // --- Stage: 720x1280 design, scaled to fit (portrait first; desktop shows it centred) ---
 const stage = document.getElementById('stage')!;
 const screen = el('div.screen');
-stage.append(screen);
+const backdrop = el('div.backdrop');
+stage.append(backdrop, screen);
 function fit(): void {
   const k = Math.min(window.innerWidth / 720, window.innerHeight / 1280);
   screen.style.transform = `translate(-50%, -50%) scale(${k})`;
@@ -39,7 +41,8 @@ window.addEventListener('resize', fit);
 fit();
 
 // --- Views (V) wired to shared Models + Controllers (M + C) ---
-const theme = new PlaceholderTheme();
+const theme: Theme = new PlaceholderTheme();
+if (theme.backdrop) { backdrop.style.backgroundImage = `url(${theme.backdrop})`; backdrop.classList.add('has-image'); }
 const normalIds = config.symbols.filter(s => s.kind === 'normal').map(s => s.id);
 const reels = new ReelsView(theme, config.grid.reels, config.grid.rows, normalIds, config.freeSpins.scatterSymbol);
 const overlays = new Overlays();
@@ -104,7 +107,7 @@ function spinOrSkip(): void {
 }
 
 bus.on('insufficientFunds', () => { hud.shakeBet(); overlays.toast(STRINGS.insufficient); });
-bus.on('autoSpinStopped', e => { if (e.reason !== 'finished') overlays.toast(STRINGS.autoStopped[e.reason]); });
+bus.on('autoSpinStopped', e => { if (e.reason !== 'finished') overlays.toast(STRINGS.autoStopped[e.reason], 2400, true); });
 game.services.config.config.subscribe(c => { hud.buyBtn.hidden = !c.buyBonus.enabled; });
 // --- Interrupted round: remember a round until it has been shown, so a reload can show it again ---
 bus.on('spinResolved', e => {
@@ -174,6 +177,26 @@ if (debug) {
   (window as unknown as { __game: unknown }).__game = game;
 }
 
+/**
+ * Short intro after Continue (Josh, 2026-11-09): the frame fades in, header drops in,
+ * controls rise, then the cards flip in one by one, column by column.
+ */
+async function playIntro(): Promise<void> {
+  screen.classList.remove('pre-intro');
+  const fade = (n: Element, from: string, delay: number, ms = 360) => n.animate(
+    [{ opacity: 0, transform: from }, { opacity: 1, transform: 'none' }],
+    { duration: ms, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+  fade(hud.top, 'translateY(-30px)', 0);
+  fade(hud.header, 'translateY(-50px)', 80);
+  fade(multWrap, 'translateY(-20px)', 180);
+  fade(reelFrame, 'none', 120, 420);
+  fade(hud.win.root, 'translateY(20px)', 260);
+  fade(hud.controls, 'translateY(70px)', 320, 420);
+  fade(hud.footer, 'translateY(30px)', 380);
+  audio.play('fsIntro');
+  await reels.reveal(220, 45, 380, () => audio.play('reelStop'));
+}
+
 // Boot budget (< 5 s): __bootMs = first frame of the loading screen.
 // ?nointro skips the loading screen (automated tests); otherwise the game opens after Continue.
 let loading = !params.has('nointro');
@@ -181,7 +204,8 @@ requestAnimationFrame(() => {
   const ms = Math.round(performance.now()); // since navigation start
   (window as unknown as { __bootMs: number }).__bootMs = ms;
   if (debug) console.info(`[boot] first frame in ${ms} ms`);
-  const ready = () => {
+  const ready = async (intro: boolean) => {
+    if (intro) await playIntro();
     loading = false;
     document.body.dataset.ready = '1';
     // A round that was cut off last time is shown again before anything else.
@@ -193,7 +217,8 @@ requestAnimationFrame(() => {
       void controllers.spin.resume(pending);
     } catch { store.set(PENDING_KEY, null); }
   };
-  if (!loading) { ready(); return; }
+  if (!loading) { void ready(false); return; }
+  screen.classList.add('pre-intro');
   const title = config.name.replace(/\s*\(.*\)\s*/, '').toUpperCase();
   const vol = (config as unknown as { volatilityRating?: number }).volatilityRating ?? 3;
   const frame = () => new Promise(r => requestAnimationFrame(r));
@@ -202,5 +227,5 @@ requestAnimationFrame(() => {
     { label: 'symbols', run: frame },
     { label: 'sounds', run: frame },
     { label: 'config', run: () => game.services.config.config.value },
-  ]).then(ready);
+  ]).then(() => ready(true));
 });

@@ -1,10 +1,15 @@
-import { el } from '../core/dom';
+import { el, fitText } from '../core/dom';
 
 /** Free-floating effects above the reels: flying win amounts and particle bursts. */
 export class FxLayer {
   readonly root = el('div.fx-layer');
 
   constructor(private screen: HTMLElement) {}
+
+  /** Removes flying win amounts and particles at once (snap to result). */
+  clear(): void {
+    for (const a of this.root.getAnimations({ subtree: true })) { try { a.finish(); } catch { /* infinite */ } }
+  }
 
   /** Touch feedback: a ring and a few sparks wherever the player touches (drawn above everything). */
   touch(clientX: number, clientY: number, layer: HTMLElement): void {
@@ -48,11 +53,13 @@ export class FxLayer {
     node.style.left = `${from.x}px`;
     node.style.top = `${from.y}px`;
     this.root.append(node);
+    fitText(node, 640); // long amounts shrink to fit the screen width
+    // Quick grow, then a slow settle back to normal size.
     await node.animate([
-      { transform: 'translate(-50%,-50%) scale(.2)', opacity: 0 },
-      { transform: 'translate(-50%,-50%) scale(1.35)', opacity: 1, offset: 0.55 },
+      { transform: 'translate(-50%,-50%) scale(.3)', opacity: 0, easing: 'cubic-bezier(.2,.9,.3,1.1)' },
+      { transform: 'translate(-50%,-50%) scale(1.3)', opacity: 1, offset: 0.25, easing: 'cubic-bezier(.3,0,.3,1)' },
       { transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
-    ], { duration: popMs, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'forwards' }).finished;
+    ], { duration: popMs, fill: 'forwards' }).finished;
     this.sparkle(from.x, from.y, big ? 18 : 10, 140);
     const dx = to.x - from.x;
     const dy = to.y - from.y;

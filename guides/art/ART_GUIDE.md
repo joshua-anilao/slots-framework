@@ -52,6 +52,7 @@ Rules:
 - Max atlas page 2048×2048; power-of-two; 2–4 px padding/extrude.
 - Fonts for numbers as **bitmap fonts** (win amounts, balance) in their own atlas.
 - Backgrounds are separate full images, not in atlases.
+- **Desktop backdrop `bg_desktop`** (required): a wide image (at least 1920×1080, landscape) shown outside the game frame on screens wider than the game (desktop, tablet landscape). It is blurred and darkened by the game, so keep it simple and in the game's theme; no text or important detail near the centre, where the game covers it.
 - **Frame names are the contract.** e.g. `sym_K.png`, `sym_K_gold.png`, `btn_spin_normal.png`, `btn_spin_pressed.png`. A theme must provide every name in `games/<id>/theme/manifest.json` (missing names fall back to placeholders and are reported).
 
 ## 4. Sizes and formats

@@ -2,7 +2,6 @@ import type { LocalGame, SpeedMode } from '@slots/game-logic';
 import type { GameConfig } from '@slots/math-core';
 import { el } from '../core/dom';
 import { buzz } from '../core/settings';
-import { TIMINGS } from '../core/pace';
 import { money, STRINGS } from '../strings';
 
 /** Multiplier bar (feature 6): ladder steps with the current one lit. */
@@ -76,6 +75,18 @@ export class WinBox {
   /** The WIN box pulses when a win lands in it. */
   bump(): void {
     this.root.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.08)', filter: 'brightness(1.6)' }, { transform: 'scale(1)' }], { duration: 260, easing: 'ease-out' });
+    this.glow();
+  }
+
+  /** Radial glow that expands quickly from the centre of the WIN box (Josh, 2026-11-09). */
+  private glow(): void {
+    const g = el('span.win-glow');
+    this.root.append(g);
+    g.animate([
+      { transform: 'translate(-50%,-50%) scale(.25)', opacity: 0.95 },
+      { transform: 'translate(-50%,-50%) scale(1)', opacity: 0.6, offset: 0.55 },
+      { transform: 'translate(-50%,-50%) scale(1.5)', opacity: 0 },
+    ], { duration: 380, easing: 'cubic-bezier(.1,.7,.3,1)' }).finished.then(() => g.remove(), () => g.remove());
   }
 
   set(amount: number, ms = 0): void {
@@ -128,12 +139,6 @@ export class HudView {
   private spinIcon = HudView.arrowIcon();
   private spinAnim: Animation | null = null;
   private speed: SpeedMode = 'normal';
-  /**
-   * One turn of the arrow (and ring) = one reel of cards dropping in (first card falling
-   * plus the stagger to the last card), so the button spins in step with the board at
-   * every speed: 420 ms normal, 240 ms turbo, 150 ms super turbo.
-   */
-  private static turnMs(m: SpeedMode): number { const t = TIMINGS[m]; return t.cardFall + 3 * t.cardStagger; }
   private turboBtn: HTMLButtonElement;
   private autoBtn: HTMLButtonElement;
   private autoLabel = el('span.lb', { text: STRINGS.auto });
@@ -188,8 +193,8 @@ export class HudView {
       const busy = p !== 'idle';
       const running = auto.active.value;
       this.spinBtn.classList.toggle('spinning', busy || running);
+      if (this.iconActive !== (busy || running)) { this.iconActive = busy || running; this.updateIconSpeed(); }
       this.spinBtn.classList.toggle('auto', running);
-      this.rotateIcon(busy || running);
       // Locked while a round animates, except during auto spin, where it is the STOP button.
       this.spinBtn.disabled = busy && !running;
       this.spinBtn.setAttribute('aria-label', running ? STRINGS.stop : STRINGS.spin);
@@ -217,6 +222,7 @@ export class HudView {
     auto.active.subscribe(showCount);
     game.models.speed.mode.subscribe(m => this.showSpeed(m));
     this.mult.mode(false);
+    this.startIcon();
   }
 
   /** Tap runs onTap; holding for HOLD_MS runs onHold instead (with a fill showing the hold). */
@@ -242,43 +248,53 @@ export class HudView {
     return btn;
   }
 
-  /** Circular arrow drawn around the exact centre of the button. */
+  /** Two arrows chasing each other round a circle (Josh's reference), centred exactly on the button. */
   private static arrowIcon(): HTMLElement {
     const icon = el('span.spin-icon');
-    // Clockwise ring (radius 30 around 50,50) with the arrowhead at its end, pointing the way it turns.
-    icon.innerHTML = '<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">'
-      + '<path d="M65 24 A30 30 0 1 1 27 30.7" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/>'
-      + '<path d="M40.5 17 L37.5 40 L16.5 21.5 Z" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>';
+    // One clockwise arc (radius 30, 140 degrees) with its arrowhead; the second is the same turned 180 degrees.
+    const arrow = '<path d="M60.3 21.8 A30 30 0 0 1 60.3 78.2" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round"/>'
+      + '<path d="M49 82.3 L64 88.5 L56.5 67.9 Z" fill="currentColor" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>';
+    icon.innerHTML = `<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true">${arrow}<g transform="rotate(180 50 50)">${arrow}</g></svg>`;
     return icon;
   }
 
   /**
-   * Spin arrow: turns while a round plays; when it ends it eases forward to its
-   * upright starting angle instead of snapping back.
+   * The icon never stops turning. Idle it turns slowly; while the slot animates it speeds up to the
+   * turbo speed, and when the round ends it eases back to the idle pace (Josh, 2026-11-09).
+   * One turn takes IDLE_TURN_MS idle, or ACTIVE_TURN_MS[speed] while a round animates.
    */
-  private rotateIcon(on: boolean): void {
-    if (on) {
-      if (this.spinAnim) return;
-      this.spinAnim = this.spinIcon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1000, iterations: Infinity });
-      this.spinAnim.playbackRate = 1000 / HudView.turnMs(this.speed);
-      return;
-    }
+  private static readonly IDLE_TURN_MS = 7143; // idle: 20% slower than 5714 (Josh, 2026-11-09)
+  private static readonly ACTIVE_TURN_MS: Record<SpeedMode, number> = { normal: 1213, turbo: 727, super: 364 }; // normal 20% faster than 1455
+  private iconActive = false;
+  private rateRaf = 0;
+
+  private startIcon(): void {
+    this.spinAnim = this.spinIcon.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(360deg)' }], { duration: 1000, iterations: Infinity });
+    this.spinAnim.playbackRate = 1000 / HudView.IDLE_TURN_MS;
+  }
+
+  /** Eases the turning speed to the pace for the current state, so it never jumps. */
+  private updateIconSpeed(): void {
     const a = this.spinAnim;
     if (!a) return;
-    this.spinAnim = null;
-    const m = new DOMMatrix(getComputedStyle(this.spinIcon).transform === 'none' ? undefined : getComputedStyle(this.spinIcon).transform);
-    const deg = (Math.atan2(m.b, m.a) * 180 / Math.PI + 360) % 360;
-    a.cancel();
-    const rest = 360 - deg;
-    this.spinIcon.animate([{ transform: `rotate(${deg}deg)` }, { transform: 'rotate(360deg)' }],
-      { duration: Math.max(250, rest / 360 * 900), easing: 'cubic-bezier(.2,.6,.35,1)' });
+    const turn = this.iconActive ? HudView.ACTIVE_TURN_MS[this.speed] : HudView.IDLE_TURN_MS;
+    const from = a.playbackRate;
+    const to = 1000 / turn;
+    const t0 = performance.now();
+    const ms = this.iconActive ? 250 : 600; // quick to speed up, slower to settle
+    cancelAnimationFrame(this.rateRaf);
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - t0) / ms);
+      a.playbackRate = from + (to - from) * k;
+      if (k < 1) this.rateRaf = requestAnimationFrame(tick);
+    };
+    this.rateRaf = requestAnimationFrame(tick);
   }
 
   /** ▷ normal, ▶ turbo, ▶▶ super turbo: the current speed is always visible on the button. */
   private showSpeed(m: SpeedMode): void {
     this.speed = m;
-    if (this.spinAnim) this.spinAnim.playbackRate = 1000 / HudView.turnMs(m);
-    this.spinBtn.style.setProperty('--turn', `${HudView.turnMs(m)}ms`);
+    this.updateIconSpeed();
     this.spinBtn.dataset.speed = m;
     this.turboBtn.dataset.mode = m;
     const icon = { normal: '▷', turbo: '▶', super: '▶▶' }[m];

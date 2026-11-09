@@ -8,9 +8,13 @@ export interface AutoSpinStopConditions {
   singleWinAtLeast: number;
   /** Stop when the balance has dropped by this much since auto spin started. 0 = off. */
   balanceDropBy: number;
+  /** Stop when the balance falls below this amount. 0 = off. */
+  balanceBelow: number;
+  /** Stop when the balance rises above this amount. 0 = off. */
+  balanceAbove: number;
 }
 
-export const DEFAULT_AUTO_STOP: AutoSpinStopConditions = { onFeature: true, singleWinAtLeast: 0, balanceDropBy: 0 };
+export const DEFAULT_AUTO_STOP: AutoSpinStopConditions = { onFeature: true, singleWinAtLeast: 0, balanceDropBy: 0, balanceBelow: 0, balanceAbove: 0 };
 
 /** Auto spin state. remaining = Infinity means until stopped. */
 export class AutoSpinModel {

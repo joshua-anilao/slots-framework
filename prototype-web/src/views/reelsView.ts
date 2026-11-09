@@ -50,6 +50,26 @@ export class ReelsView {
 
   cellEl(p: Pos): HTMLElement { return this.cells[p.reel][p.row]; }
 
+  /**
+   * Game intro after Continue: cards flip in one at a time, top to bottom in a column,
+   * then the next column (Josh, 2026-11-09). onColumn fires as each column completes.
+   */
+  async reveal(cardMs: number, gapMs: number, delay = 0, onColumn?: (reel: number) => void): Promise<void> {
+    const anims: Promise<unknown>[] = [];
+    let k = 0;
+    this.cells.forEach((col, r) => {
+      col.forEach(n => {
+        anims.push(n.animate([
+          { transform: 'perspective(600px) rotateY(90deg)', opacity: 0, filter: 'brightness(2.5)' },
+          { transform: 'perspective(600px) rotateY(0)', opacity: 1, filter: 'brightness(1)' },
+        ], { duration: cardMs, delay: delay + k * gapMs, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' }).finished.catch(() => {}));
+        k++;
+      });
+      if (onColumn) setTimeout(() => onColumn(r), delay + k * gapMs);
+    });
+    await Promise.all(anims);
+  }
+
   /** Draws a grid with no animation. `backs` are drawn as card backs (gold cards waiting to become WILD). */
   setGrid(grid: Grid, backs: Pos[] = []): void {
     this.grid = grid;
@@ -79,6 +99,14 @@ export class ReelsView {
     this.slammed = true;
     for (const a of this.running) a.finish();
     this.endSpin();
+  }
+
+  /** Jumps every running card animation to its end (infinite CSS loops are left alone). */
+  finishAll(): void {
+    for (const a of this.root.getAnimations({ subtree: true })) {
+      if (a.effect?.getComputedTiming().endTime === Infinity) continue;
+      try { a.finish(); } catch { /* already done */ }
+    }
   }
 
   /** Lights the winning cells and dims the rest. */
@@ -131,8 +159,13 @@ export class ReelsView {
     const d = pace.t.pop;
     for (const p of removed) this.cells[p.reel][p.row].classList.remove('win');
     const anims = removed.map(p => this.cells[p.reel][p.row].animate(
-      [{ transform: 'scale(1)', opacity: 1, filter: 'brightness(1)' }, { transform: 'scale(1.15)', opacity: 1, filter: 'brightness(2.2)', offset: 0.35 },
-        { transform: 'scale(.2)', opacity: 0, filter: 'brightness(3)' }],
+      // Burst without any scaling (Josh: no squash and stretch): a hard shake, flash, then fade.
+      [{ transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(1)' },
+        { transform: 'translate(-6px,1px) rotate(-3deg)', filter: 'brightness(1.8)', offset: 0.15 },
+        { transform: 'translate(6px,-1px) rotate(3deg)', filter: 'brightness(2.2)', offset: 0.3 },
+        { transform: 'translate(-4px,0) rotate(-2deg)', filter: 'brightness(2.6)', offset: 0.45 },
+        { transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(3)', offset: 0.6 },
+        { transform: 'translate(0,0) rotate(0)', opacity: 0, filter: 'brightness(3)' }],
       { duration: d, easing: 'ease-in', fill: 'forwards' }).finished);
     await Promise.race([Promise.all(anims), pace.wait(d + 50)]);
   }
@@ -207,10 +240,14 @@ export class ReelsView {
       const antic = t.anticipation > 0 && scattersSoFar >= 2;
       let start: number;
       let fall = t.cardFall;
+      let stagger = t.cardStagger;
       if (antic) {
-        // Spotlight this reel and drop it alone, slowly, after the previous reel landed.
-        start = cursor + t.anticipation * 0.45;
-        fall = t.cardFall * 1.4;
+        // Near miss: the scatters already on the board glow, then this reel's cards
+        // drop alone in a spotlight, slowly, one card at a time (Josh, 2026-11-09).
+        start = cursor + t.anticipation * (anticipating ? 0.45 : 0.9);
+        // Josh: each card falls fast, with a clear pause before the next one starts.
+        fall = t.cardFall * 0.7;
+        stagger = fall + t.anticipation * 0.5;
         const beamAt = cursor;
         this.later(() => {
           if (!anticipating) { anticipating = true; this.root.classList.add('antic-on'); this.onAnticipate(); }
@@ -226,11 +263,11 @@ export class ReelsView {
           { transform: `translateY(${-(row + 1) * CELL_H - 30}px)` },
           { transform: 'translateY(8px)', offset: 0.82 },
           { transform: 'translateY(0)' },
-        ], { duration: this.slammed ? 0 : fall, delay: this.slammed ? 0 : start + k * t.cardStagger, easing: 'cubic-bezier(.45,0,.75,1)', fill: 'backwards' });
+        ], { duration: this.slammed ? 0 : fall, delay: this.slammed ? 0 : start + k * stagger, easing: 'cubic-bezier(.45,0,.75,1)', fill: 'backwards' });
         reelAnims.push(a);
         this.running.push(a);
       }
-      const end = start + (this.rows - 1) * t.cardStagger + fall;
+      const end = start + (this.rows - 1) * stagger + fall;
       cursor = Math.max(cursor, end);
       const here = grid[r].filter(c => c.s === this.scatterId).length;
       scattersSoFar += here;

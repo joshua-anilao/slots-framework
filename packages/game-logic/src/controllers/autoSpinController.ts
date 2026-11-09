@@ -33,6 +33,9 @@ export class AutoSpinController {
       if (c.onFeature && r.freeSpins) { reason = 'feature'; break; }
       if (c.singleWinAtLeast > 0 && r.totalWin >= c.singleWinAtLeast) { reason = 'bigWin'; break; }
       if (c.balanceDropBy > 0 && this.model.startBalance - this.wallet.balance.value >= c.balanceDropBy) { reason = 'balanceDrop'; break; }
+      const bal = this.wallet.balance.value;
+      if (c.balanceBelow > 0 && bal < c.balanceBelow) { reason = 'balanceBelow'; break; }
+      if (c.balanceAbove > 0 && bal > c.balanceAbove) { reason = 'balanceAbove'; break; }
     }
     offFunds();
     if (reason === 'finished' && this.model.remaining.value > 0) reason = 'player';

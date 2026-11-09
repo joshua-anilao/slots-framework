@@ -8,7 +8,20 @@
 html, body { margin: 0; height: 100%; background: #120a1f; color: var(--text); overflow: hidden;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; touch-action: manipulation; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
-#stage { position: fixed; inset: 0; }
+#stage { position: fixed; inset: 0; overflow: hidden; }
+/* Wide screens (desktop, tablet landscape): a themed backdrop fills the space outside the game.
+   Placeholder art is drawn in CSS; a theme replaces it with its bg_desktop image (art guide). */
+.backdrop { position: absolute; inset: -40px; background:
+    radial-gradient(60% 50% at 50% 40%, rgba(245,197,66,.18), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 9%, rgba(0,0,0,.35) 9% 10%, rgba(245,197,66,.08) 10% 10.6%, transparent 10.6% 20%),
+    radial-gradient(120% 90% at 50% 100%, #3a1d57 0%, #1d0f30 55%, #0b0614 100%);
+  background-size: cover; filter: blur(6px) saturate(1.1); transform: scale(1.04); }
+.backdrop::after { content: ""; position: absolute; inset: 0;
+  background: radial-gradient(70% 90% at 50% 50%, transparent 40%, rgba(0,0,0,.65) 100%); }
+.backdrop.has-image { background-position: center; background-size: cover; filter: blur(8px) brightness(.55); }
+.screen { box-shadow: 0 0 0 3px rgba(245,197,66,.35), 0 0 80px rgba(0,0,0,.8); }
+/* Before the intro: game parts stay hidden behind the loading screen */
+.screen.pre-intro > :not(.loading):not(.fx-layer):not(.touch-layer), .screen.pre-intro .sym { opacity: 0; }
 .screen { position: absolute; left: 50%; top: 50%; width: 720px; height: 1280px; transform-origin: center;
   background: radial-gradient(120% 70% at 50% 35%, var(--bg2), var(--bg1) 55%, var(--bg0)); overflow: hidden;
   display: flex; flex-direction: column; align-items: center; transition: background .6s; }
@@ -56,7 +69,7 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 .reel { position: relative; width: 128px; overflow: hidden; border-radius: 10px; background: rgba(255,255,255,.03); }
 /* Anticipation: other reels dim, the dropping reel stands in a light beam */
 .reels.antic-on .reel:not(.beam) .sym:not(.t-scatter) { filter: brightness(.35); transition: filter .2s; }
-.reels.antic-on .sym.t-scatter { animation: celebrate .5s ease-in-out infinite alternate; z-index: 2; }
+.reels.antic-on .sym.t-scatter { animation: celebrate .45s linear infinite; z-index: 2; }
 .reel.beam { z-index: 3; box-shadow: 0 0 0 3px #fff3b0, 0 0 40px 12px rgba(245,197,66,.75); }
 .reel.beam::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(255,240,170,.55) 30%, rgba(255,255,230,.85) 50%, rgba(255,240,170,.55) 70%, transparent);
@@ -72,7 +85,8 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 0 3px 0 rgba(0,0,0,.4); transition: opacity .15s, filter .15s; }
 .sym .glyph { font-size: 64px; font-weight: 900; line-height: 1; }
 .sym.t-low .glyph { font-size: 70px; font-family: Georgia, serif; }
-.sym.t-wild .glyph, .sym.t-scatter .glyph { font-size: 34px; letter-spacing: 1px; }
+.sym.t-wild .glyph { font-size: 34px; letter-spacing: 1px; }
+.sym.t-scatter .glyph { font-size: 25px; letter-spacing: 0; }
 .sym.t-scatter .sub { font-size: 20px; font-weight: 800; }
 .sym.t-wild { box-shadow: inset 0 0 0 3px #fff3b0, 0 0 14px rgba(245,197,66,.8); }
 .sym.t-scatter { box-shadow: inset 0 0 0 3px #b5fff6, 0 0 14px rgba(41,211,192,.8); }
@@ -85,19 +99,22 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 /* Premium tiles: small idle animation on the shape */
 .sym.t-high .glyph { animation: premium 2.2s ease-in-out infinite; display: inline-block; text-shadow: 0 0 10px rgba(255,255,255,.55); }
 .sym.t-high:nth-child(odd) .glyph { animation-delay: -1.1s; }
-@keyframes premium { 0%, 100% { transform: scale(1) rotate(0); filter: brightness(1); } 50% { transform: scale(1.1) rotate(-6deg); filter: brightness(1.35); } }
+@keyframes premium { 0%, 100% { transform: rotate(0); filter: brightness(1); } 50% { transform: rotate(-6deg); filter: brightness(1.35); } }
 .sym.blur .glyph { animation: none; }
-.sym.blur { filter: blur(1.5px); transform: scaleY(1.08); opacity: .85; }
+.sym.blur { filter: blur(1.5px); opacity: .85; }
 .sym.dim { opacity: .9; filter: brightness(.28) grayscale(.5); }
-.sym.celebrate { z-index: 2; animation: celebrate .6s ease-in-out infinite alternate; }
-@keyframes celebrate { from { transform: scale(1); box-shadow: 0 0 0 3px #b5fff6, 0 0 20px #29d3c0; } to { transform: scale(1.12); box-shadow: 0 0 0 5px #fff, 0 0 46px #29d3c0; } }
+.sym.celebrate { z-index: 2; animation: celebrate .5s linear infinite; }
+/* No scaling on cards (Josh): wins and scatters shake and glow instead */
+@keyframes celebrate { 0% { transform: rotate(0); box-shadow: 0 0 0 3px #b5fff6, 0 0 20px #29d3c0; } 25% { transform: rotate(-4deg); }
+  50% { transform: rotate(0); box-shadow: 0 0 0 5px #fff, 0 0 46px #29d3c0; } 75% { transform: rotate(4deg); } 100% { transform: rotate(0); box-shadow: 0 0 0 3px #b5fff6, 0 0 20px #29d3c0; } }
 .sym.back { background: repeating-linear-gradient(45deg, #b32020 0 10px, #8f1515 10px 20px); box-shadow: inset 0 0 0 5px #f5c542, inset 0 0 0 8px #fff3b0;
   color: #f5c542; }
 .sym.back .back-mark { font-size: 56px; text-shadow: 0 0 12px #f5c542; }
-.sym.win { animation: winPulse .5s ease-in-out infinite alternate; z-index: 2; }
-@keyframes winPulse { from { transform: scale(1); box-shadow: 0 0 0 3px var(--win), 0 0 18px var(--win); } to { transform: scale(1.07); box-shadow: 0 0 0 4px #fff, 0 0 30px var(--win); } }
+.sym.win { animation: winShake .5s linear infinite; z-index: 2; box-shadow: 0 0 0 4px var(--win), 0 0 26px var(--win); }
+@keyframes winShake { 0%, 100% { transform: translate(0,0) rotate(0); } 25% { transform: translate(-1.5px,0) rotate(-.8deg); }
+  50% { transform: translate(1.5px,-.5px) rotate(.8deg); } 75% { transform: translate(-1px,.5px) rotate(-.5deg); } }
 .sym.to-wild { animation: toWild .35s ease-out; }
-@keyframes toWild { 0% { transform: rotateY(90deg) scale(1.2); filter: brightness(3); } 100% { transform: none; filter: none; } }
+@keyframes toWild { 0% { transform: rotateY(90deg); filter: brightness(3); } 100% { transform: none; filter: none; } }
 .spots { position: absolute; inset: 0; pointer-events: none; }
 .spot { position: absolute; padding: 2px 8px; border-radius: 10px; background: #ff4f8b; color: #fff; font-weight: 900; font-size: 20px; }
 .fs-title { display: none; flex-direction: column; align-items: center; line-height: 1; }
@@ -111,6 +128,9 @@ body.fs .fs-title { display: flex; }
 /* Win row */
 .win-box { margin-top: 16px; height: 72px; width: 520px; border-radius: 36px; background: rgba(0,0,0,.5); border: 2px solid rgba(245,197,66,.5);
   display: flex; align-items: center; justify-content: center; gap: 16px; position: relative; }
+.win-glow { position: absolute; left: 50%; top: 50%; width: 560px; height: 150px; border-radius: 50%; pointer-events: none; z-index: 0;
+  background: radial-gradient(closest-side, rgba(255,240,170,.95), rgba(245,197,66,.55) 45%, rgba(245,197,66,0) 100%); mix-blend-mode: screen; }
+.win-box > .win-label, .win-box > .win-value { position: relative; z-index: 1; }
 .win-label { font-size: 22px; color: var(--muted); font-weight: 800; }
 .win-value { font-size: 40px; font-weight: 900; color: var(--win); font-variant-numeric: tabular-nums; }
 .step-note { position: absolute; top: -34px; font-size: 26px; text-shadow: 0 2px 4px #000; color: var(--win); font-weight: 800; }
@@ -147,7 +167,10 @@ body.fs .fs-title { display: flex; }
 .spin-btn > .spin-icon { inset: 0; margin: auto; width: 104px; height: 104px; border-radius: 0; color: #3b2300;
   filter: drop-shadow(0 2px 0 rgba(255,255,255,.5)); transform-origin: 50% 50%; }
 .spin-icon svg { display: block; }
-.spin-btn.spinning .spin-ring { animation-duration: var(--turn, .42s); } /* same period as the arrow (hudView turnMs) */
+.spin-ring { animation-duration: 7.1s; } /* idle: same slow pace as the icon (hudView IDLE_TURN_MS) */
+.spin-btn.spinning .spin-ring { animation-duration: 1.21s; }
+.spin-btn.spinning[data-speed="turbo"] .spin-ring { animation-duration: .73s; }
+.spin-btn.spinning[data-speed="super"] .spin-ring { animation-duration: .36s; }
 .spin-btn:disabled { cursor: default; animation: none; }
 .spin-btn:disabled .spin-face, .spin-btn:disabled .spin-icon { filter: saturate(.5) brightness(.8); }
 .spin-btn:disabled:active { transform: none; box-shadow: 0 6px 0 #6b4300; }
@@ -170,9 +193,9 @@ body.fs .fs-title { display: flex; }
 
 /* Effects layer: flying win amounts and particles */
 .fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 15; }
-.fly-win { position: absolute; font-size: 64px; font-weight: 900; color: var(--win); white-space: nowrap;
+.fly-win { position: absolute; z-index: 3; font-size: 112px; font-weight: 900; color: var(--win); white-space: nowrap;
   text-shadow: 0 4px 0 #6b4300, 0 0 24px rgba(245,197,66,.9), 0 0 2px #000; }
-.fly-win.big { font-size: 80px; color: #fff; text-shadow: 0 4px 0 #6b4300, 0 0 34px #f5c542, 0 0 60px #ff8a00; }
+.fly-win.big { font-size: 128px; color: #fff; text-shadow: 0 4px 0 #6b4300, 0 0 34px #f5c542, 0 0 60px #ff8a00; }
 .particle { position: absolute; border-radius: 50%; box-shadow: 0 0 10px currentColor, 0 0 6px #fff; }
 .twinkle { position: absolute; width: 18px; height: 18px; background: #fff;
   clip-path: polygon(50% 0, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0 50%, 39% 39%); filter: drop-shadow(0 0 6px #f5c542); }
@@ -183,6 +206,11 @@ body.fs .fs-title { display: flex; }
 .toast { position: absolute; left: 50%; top: 210px; transform: translate(-50%, -20px); opacity: 0; transition: .2s; pointer-events: none !important;
   background: rgba(0,0,0,.85); border: 2px solid var(--gold); padding: 14px 26px; border-radius: 30px; font-size: 24px; font-weight: 700; white-space: nowrap; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* Centre notice: readable message in the middle of the board (auto spin stopped) */
+.toast.center { top: 50%; width: 600px; white-space: normal; text-align: center; font-size: 34px; font-weight: 900; line-height: 1.25;
+  padding: 30px 34px; border-radius: 26px; border-width: 3px; background: rgba(20,8,36,.94);
+  box-shadow: 0 0 0 2px #000, 0 0 40px rgba(245,197,66,.45); transform: translate(-50%, -40%); z-index: 20; }
+.toast.center.show { transform: translate(-50%, -50%); }
 .banner { position: absolute; inset: 0; padding: 0 40px; text-align: center; background: rgba(0,0,0,.7); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
 .banner-title { font-size: 80px; font-weight: 900; color: #b5fff6; text-shadow: 0 0 30px #29d3c0; text-align: center; }
 .banner.fs-outro .banner-title, .banner.fs-outro .banner-sub { color: var(--win); text-shadow: 0 0 30px var(--gold); }
@@ -392,3 +420,32 @@ body.fs .fs-title { display: flex; }
 .rd-label { display: flex; justify-content: space-between; font-size: 22px; font-weight: 800; margin-bottom: 10px; }
 .rd-grid { display: grid; grid-template-columns: repeat(5, max-content); gap: 4px; justify-content: center; }
 .rd-steps { font-size: 18px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+
+/* Auto Spin Settings: centred dialog (layout from Josh's reference, our own look) */
+.modal.center { align-items: center; justify-content: center; }
+.modal.center .modal-panel { width: 664px; border-radius: 26px; border: 3px solid var(--gold2); padding: 18px 22px 22px;
+  box-shadow: 0 0 0 2px #000, 0 20px 60px rgba(0,0,0,.6); }
+.modal.center .modal-head { justify-content: center; position: relative; padding-bottom: 12px; border-bottom: 1px solid rgba(245,197,66,.3); }
+.modal.center .modal-x { position: absolute; right: 0; top: -6px; }
+.auto-box { background: rgba(0,0,0,.28); border-radius: 18px; padding: 6px 12px 14px; margin-bottom: 8px; }
+.opt-row { display: flex; align-items: center; gap: 14px; min-height: 76px; padding: 0 4px; }
+.opt-row + .opt-row { border-top: 1px solid rgba(255,255,255,.06); }
+.opt-label { flex: 1; font-size: 23px; cursor: pointer; }
+.opt-row.off .opt-label { color: var(--muted); }
+.opt-row.off .step-val { opacity: .45; }
+.radio { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 3px solid var(--muted); position: relative; transition: border-color .15s; }
+.radio.on { border-color: var(--gold); }
+.radio.on::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 10px rgba(245,197,66,.8); }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.step-btn { width: 50px; height: 50px; border-radius: 12px; font-size: 32px; font-weight: 900; line-height: 1; background: rgba(255,255,255,.12); }
+.step-btn:active { transform: scale(.92); background: rgba(255,255,255,.22); }
+.step-val { min-width: 150px; height: 50px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; font-weight: 800;
+  background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.12); }
+.presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; padding-left: 50px; }
+.preset { height: 54px; border-radius: 12px; background: rgba(255,255,255,.08); font-size: 22px; font-weight: 800; }
+.preset.on { background: var(--gold); color: #3b2300; }
+.auto-actions { margin-top: 18px; }
+.btn-cancel, .btn-start { flex: 1; height: 80px; border-radius: 18px; font-size: 30px; font-weight: 900; color: #fff; }
+.btn-cancel { background: linear-gradient(#e0566b, #9b1c31); box-shadow: 0 4px 0 #5e0f1c; }
+.btn-start { background: linear-gradient(#5fe08a, #17924a); box-shadow: 0 4px 0 #0b5a2c, 0 0 18px rgba(74,222,128,.45); }
+.btn-cancel:active, .btn-start:active { transform: translateY(3px); box-shadow: none; }

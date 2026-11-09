@@ -16,7 +16,7 @@ const LOOKS: Record<string, Look> = {
   L3: { glyph: 'Q', bg: '#3a3550', fg: '#8cc4ff', tier: 'low' },
   L4: { glyph: 'J', bg: '#3a3550', fg: '#8ff0b4', tier: 'low' },
   WILD: { glyph: 'WILD', bg: '#f2b705', fg: '#3b2300', tier: 'wild' },
-  SC: { glyph: 'FREE', bg: '#00b3a4', fg: '#002b28', tier: 'scatter' },
+  SC: { glyph: 'SCATTER', bg: '#00b3a4', fg: '#002b28', tier: 'scatter' },
 };
 const FALLBACK: Look = { glyph: '?', bg: '#555', fg: '#fff', tier: 'low' };
 
@@ -32,7 +32,6 @@ export class PlaceholderTheme implements Theme {
     node.style.setProperty('--bg', cell.g ? '#d4a017' : look.bg);
     node.style.setProperty('--fg', cell.g ? look.bg : look.fg);
     if (cell.g) node.append(el('span.foil'));
-    if (look.tier === 'scatter') node.append(el('span.sub', { text: 'SPINS' }));
     return node;
   }
 

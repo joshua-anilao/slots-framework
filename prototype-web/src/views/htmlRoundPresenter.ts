@@ -20,6 +20,8 @@ export class HtmlRoundPresenter implements IRoundPresenter {
   private pace = new Pace();
   private phase: 'idle' | 'spinning' | 'resolving' = 'idle';
   private multValue = 1;
+  /** Player tapped the board: the current spin jumps to its final grid and win. */
+  private snapRequested = false;
 
   constructor(
     private readonly reels: ReelsView,
@@ -91,11 +93,18 @@ export class HtmlRoundPresenter implements IRoundPresenter {
     this.phase = 'idle';
   }
 
-  /** Tap: slam the reels while spinning, otherwise speed up the rest of the round. */
+  /**
+   * Tap during playback: a banner or big win closes / finishes its count-up; otherwise the
+   * current spin (base or one free spin) snaps straight to its final grid and win.
+   */
   skip(): void {
-    if (this.phase === 'spinning') this.reels.slam();
-    else this.pace.skip();
-    this.overlays.skip();
+    if (this.overlays.busy) { this.overlays.skip(); return; }
+    if (this.phase === 'idle') return;
+    this.snapRequested = true;
+    this.reels.slam();
+    this.reels.finishAll();
+    this.fx.clear();
+    this.pace.cancelWaits();
   }
 
   /** Lights the multiplier step; on a step up, plays a rising sound and a burst that grows with the step. */
@@ -118,6 +127,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
     let shown = shownBefore;
     const steps = spin.steps;
     if (!steps.length || !steps[0].grid) return shown + spin.spinWin;
+    this.snapRequested = false;
     this.phase = 'spinning';
     this.multValue = 0;
     this.setMultiplier(steps[0].multiplier);
@@ -128,6 +138,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
+      if (this.snapRequested) return this.snapToEnd(spin, shownBefore);
       if (!step.wins.length) break;
       this.setMultiplier(step.multiplier);
       const t = this.pace.t;
@@ -157,7 +168,27 @@ export class HtmlRoundPresenter implements IRoundPresenter {
       this.reels.showSpots(step.spots);
       await this.pace.wait(this.pace.t.stepPause);
     }
+    if (this.snapRequested) return this.snapToEnd(spin, shownBefore);
     this.reels.clearMarks();
+    this.hud.win.note('');
+    return shown;
+  }
+
+  /** Shows the end state of a spin at once: final grid, final multiplier, full win. */
+  private snapToEnd(spin: SpinOutcome, shownBefore: number): number {
+    this.snapRequested = false;
+    const steps = spin.steps;
+    const last = steps[steps.length - 1];
+    this.reels.finishAll();
+    this.fx.clear();
+    this.reels.clearMarks();
+    if (last.grid) this.reels.setGrid(last.grid);
+    const spotsStep = [...steps].reverse().find(s => s.spots);
+    this.reels.showSpots(spotsStep?.spots);
+    this.multValue = last.multiplier;
+    this.hud.mult.set(last.multiplier);
+    const shown = shownBefore + spin.spinWin;
+    this.hud.win.set(shown);
     this.hud.win.note('');
     return shown;
   }
@@ -169,13 +200,12 @@ export class HtmlRoundPresenter implements IRoundPresenter {
       await this.pace.wait(highlightMs);
       return;
     }
-    const pts = winCells.map(n => this.fx.centerOf(n));
-    const from = pts.length
-      ? { x: pts.reduce((n, p) => n + p.x, 0) / pts.length, y: pts.reduce((n, p) => n + p.y, 0) / pts.length }
-      : this.fx.centerOf(this.reels.root);
+    // Josh: the amount appears only in the centre of the board, big; it grows, slowly settles back, then flies to WIN.
+    void winCells;
+    const from = this.fx.centerOf(this.reels.root);
     const to = this.fx.centerOf(this.hud.win.valueEl);
-    const popMs = Math.round(highlightMs * 0.6);
-    const flyMs = Math.round(highlightMs * 0.35);
+    const popMs = Math.round(highlightMs * 0.75);
+    const flyMs = Math.round(highlightMs * 0.22);
     const landed = this.fx.flyWin(money(stepWin), from, to, popMs, flyMs, this.multValue > 1)
       .then(() => { this.hud.win.raise(newTotal, 250); this.hud.win.bump(); });
     setTimeout(() => audio.play('fly'), popMs);

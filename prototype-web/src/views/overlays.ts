@@ -13,8 +13,10 @@ export class Overlays {
     this.root.append(this.toastEl);
   }
 
-  toast(text: string, ms = 1600): void {
+  /** center = big notice in the middle of the screen for messages the player must read (auto spin stopped). */
+  toast(text: string, ms = 1600, center = false): void {
     this.toastEl.textContent = text;
+    this.toastEl.classList.toggle('center', center);
     this.toastEl.classList.add('show');
     clearTimeout((this.toastEl as unknown as { _t: number })._t);
     (this.toastEl as unknown as { _t: number })._t = window.setTimeout(() => this.toastEl.classList.remove('show'), ms);
@@ -22,6 +24,9 @@ export class Overlays {
 
   /** Called by the presenter's skip(): closes the current banner or finishes a count-up. */
   skip(): void { this.skipFn?.(); }
+
+  /** True while a banner or big win is on screen. */
+  get busy(): boolean { return this.skipFn !== null; }
 
   /** A banner (free spins intro/outro). Closes on tap or after `ms`. */
   async banner(title: string, sub: string, ms: number, pace: Pace, cls = '', extra = ''): Promise<void> {

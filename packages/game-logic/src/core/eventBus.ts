@@ -19,7 +19,7 @@ export interface GameEvents {
   debugOverridesChanged: { active: boolean; changed: string[] };
 }
 
-export type AutoSpinStopReason = 'finished' | 'player' | 'feature' | 'bigWin' | 'balanceDrop' | 'insufficientFunds' | 'error';
+export type AutoSpinStopReason = 'finished' | 'player' | 'feature' | 'bigWin' | 'balanceDrop' | 'balanceBelow' | 'balanceAbove' | 'insufficientFunds' | 'error';
 
 /** Typed publish/subscribe bus. */
 export class EventBus {

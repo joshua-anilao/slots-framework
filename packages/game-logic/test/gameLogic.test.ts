@@ -84,6 +84,21 @@ describe('auto spin', () => {
     expect(reason).toBe('balanceDrop');
     expect(100_000 - g.models.wallet.balance.value).toBeGreaterThanOrEqual(100);
   });
+
+  it('stops when the balance falls below a set amount', async () => {
+    const g = createLocalGame({ config, balance: 1_000, seed: 3, debug: true });
+    const reason = await g.controllers.autoSpin.start(Infinity, { onFeature: false, balanceBelow: 950 });
+    expect(reason).toBe('balanceBelow');
+    expect(g.models.wallet.balance.value).toBeLessThan(950);
+  });
+
+  it('stops when the balance rises above a set amount', async () => {
+    const g = createLocalGame({ config, balance: 1_000, seed: 3, debug: true });
+    g.controllers.spin.forceNext({ triggerFreeSpins: true });
+    const reason = await g.controllers.autoSpin.start(200, { onFeature: false, balanceAbove: 1_000.01 });
+    expect(reason).toBe('balanceAbove'); // the forced free spins win more than the 10 bet
+    expect(g.models.wallet.balance.value).toBeGreaterThan(1_000.01);
+  });
 });
 
 describe('buy bonus', () => {

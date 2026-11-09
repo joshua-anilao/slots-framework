@@ -12,6 +12,8 @@ export interface Theme {
   blurSymbol(id: string): HTMLElement;
   /** Card back (frame "sym_back"): shown while a gold card turns into a WILD. */
   cardBack(): HTMLElement;
+  /** Image shown outside the game on wide screens (art frame bg_desktop). None = CSS placeholder. */
+  readonly backdrop?: string;
 }
 
 export const frameName = (cell: Cell): string => `sym_${cell.s}${cell.g ? '_gold' : ''}`;
