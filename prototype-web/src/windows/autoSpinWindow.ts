@@ -51,6 +51,7 @@ export function openAutoSpinWindow(host: HTMLElement, game: LocalGame, onStart: 
         onStart(count);
       },
     }),
+    el('div.auto-hint', { text: STRINGS.autoHint }),
   );
   render();
 }

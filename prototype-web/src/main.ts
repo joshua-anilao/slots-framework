@@ -15,6 +15,9 @@ import { WinnerNotice } from './views/winnerNotice';
 import { openAutoSpinWindow } from './windows/autoSpinWindow';
 import { openBetWindow } from './windows/betWindow';
 import { openBuyBonusWindow } from './windows/buyBonusWindow';
+import { openMenu } from './windows/menuWindows';
+import { buzz, loadSettings } from './core/settings';
+import type { SpinResponse } from '@slots/game-logic';
 import { LoadingScreen } from './windows/loadingScreen';
 import { Modal } from './windows/modal';
 import './styles.css';
@@ -41,9 +44,17 @@ const normalIds = config.symbols.filter(s => s.kind === 'normal').map(s => s.id)
 const reels = new ReelsView(theme, config.grid.reels, config.grid.rows, normalIds, config.freeSpins.scatterSymbol);
 const overlays = new Overlays();
 let presenter!: HtmlRoundPresenter;
+// Demo balance and an unfinished round survive a reload on this device (a server does this later).
+const BAL_KEY = 'slots.game001.balance';
+const PENDING_KEY = 'slots.game001.pendingRound';
+const store = {
+  get: (k: string): string | null => { try { return localStorage.getItem(k); } catch { return null; } },
+  set: (k: string, v: string | null) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch { /* blocked */ } },
+};
+const savedBal = Number(store.get(BAL_KEY));
 const game = createLocalGame({
   config,
-  balance: 10_000,
+  balance: Number.isFinite(savedBal) && savedBal > 0 ? savedBal : 10_000,
   debug,
   seed: seedParam ? Number(seedParam) : undefined,
   presenter: { present: (r, s) => presenter.present(r, s), skip: () => presenter.skip() },
@@ -55,12 +66,19 @@ let debugPanel: DebugPanel | null = null;
 const hud = new HudView(game, {
   onSpin: () => spinOrSkip(),
   onBet: () => openBetWindow(screen, game),
+  // Tap AUTO = infinite auto spin straight away (stop conditions from the last options used).
+  // Hold AUTO = options window. During auto spin, tapping AUTO stops it (Josh, 2026-11-09).
   onAuto: () => {
+    if (models.autoSpin.active.value) { controllers.autoSpin.stop(); return; }
+    if (models.spin.isBusy || Modal.isOpen) return;
+    void controllers.autoSpin.start(Infinity);
+  },
+  onAutoHold: () => {
     if (models.spin.isBusy || models.autoSpin.active.value) return;
     openAutoSpinWindow(screen, game, n => { void controllers.autoSpin.start(n); });
   },
   onTurbo: () => overlays.toast(STRINGS.speedToast[controllers.speed.cycle()]),
-  onSettings: () => overlays.toast(STRINGS.comingSoon('Settings and game rules')),
+  onSettings: () => { if (!models.spin.isBusy && !models.autoSpin.active.value) openMenu({ host: screen, game, theme, onSound: () => hud.showSound(audio.muted) }); },
   onBuy: () => {
     if (models.spin.isBusy || models.autoSpin.active.value) { overlays.toast(STRINGS.buyBusy); return; }
     openBuyBonusWindow(screen, game, () => { void controllers.buyBonus.buy(1); });
@@ -88,6 +106,46 @@ function spinOrSkip(): void {
 bus.on('insufficientFunds', () => { hud.shakeBet(); overlays.toast(STRINGS.insufficient); });
 bus.on('autoSpinStopped', e => { if (e.reason !== 'finished') overlays.toast(STRINGS.autoStopped[e.reason]); });
 game.services.config.config.subscribe(c => { hud.buyBtn.hidden = !c.buyBonus.enabled; });
+// --- Interrupted round: remember a round until it has been shown, so a reload can show it again ---
+bus.on('spinResolved', e => {
+  const r = e.result;
+  const pending: SpinResponse = {
+    roundId: e.roundId, result: r, balanceAfter: e.balanceAfter, timestamp: Date.now(),
+    balanceBefore: Math.round((e.balanceAfter - r.totalWin + r.cost) * 100) / 100,
+  };
+  store.set(PENDING_KEY, JSON.stringify(pending));
+  store.set(BAL_KEY, String(e.balanceAfter));
+});
+models.wallet.balance.subscribe(() => { if (!models.spin.isBusy) store.set(BAL_KEY, String(game.services.wallet.peek())); });
+bus.on('roundPresented', () => { store.set(PENDING_KEY, null); store.set(BAL_KEY, String(game.services.wallet.peek())); });
+
+// --- Connection strength: bars from the measured round trip; offline strip when a request fails ---
+const wifi = hud.footer.querySelector('.wifi') as HTMLElement;
+const offlineBar = el('div.offline-bar', { text: STRINGS.offline });
+screen.append(offlineBar);
+let sentAt = 0;
+const setBars = (n: 0 | 1 | 2 | 3) => { wifi.className = `wifi bars-${n}`; };
+const setOffline = (off: boolean) => {
+  if (off === offlineBar.classList.contains('show')) return;
+  offlineBar.classList.toggle('show', off);
+  if (off) setBars(0); else overlays.toast(STRINGS.reconnected);
+};
+bus.on('spinStarted', () => { sentAt = performance.now(); });
+bus.on('spinResolved', () => {
+  const rtt = performance.now() - sentAt;
+  setOffline(false);
+  setBars(rtt < 150 ? 3 : rtt < 400 ? 2 : 1);
+});
+bus.on('connectionLost', () => { setOffline(true); hud.shakeBet(); });
+window.addEventListener('offline', () => setOffline(true));
+window.addEventListener('online', () => setOffline(false));
+if (navigator.onLine === false) setOffline(true);
+
+// --- Haptics (Settings > Vibration) ---
+bus.on('freeSpinsTriggered', () => buzz([40, 60, 40]));
+bus.on('winTier', () => buzz(80));
+controllers.speed.set(loadSettings().speed);
+
 bus.on('spinFailed', e => overlays.toast(e.message, 3000));
 game.services.config.config.subscribe(() => hud.mult.mode(document.body.classList.contains('fs')));
 
@@ -123,7 +181,18 @@ requestAnimationFrame(() => {
   const ms = Math.round(performance.now()); // since navigation start
   (window as unknown as { __bootMs: number }).__bootMs = ms;
   if (debug) console.info(`[boot] first frame in ${ms} ms`);
-  const ready = () => { loading = false; document.body.dataset.ready = '1'; };
+  const ready = () => {
+    loading = false;
+    document.body.dataset.ready = '1';
+    // A round that was cut off last time is shown again before anything else.
+    const raw = store.get(PENDING_KEY);
+    if (!raw) return;
+    try {
+      const pending = JSON.parse(raw) as SpinResponse;
+      overlays.toast(STRINGS.resuming, 2500);
+      void controllers.spin.resume(pending);
+    } catch { store.set(PENDING_KEY, null); }
+  };
   if (!loading) { ready(); return; }
   const title = config.name.replace(/\s*\(.*\)\s*/, '').toUpperCase();
   const vol = (config as unknown as { volatilityRating?: number }).volatilityRating ?? 3;

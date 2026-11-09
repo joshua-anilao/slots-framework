@@ -25,6 +25,14 @@ export class InsufficientFundsError extends Error {
   }
 }
 
+/** The request never reached the server (offline / timeout). Nothing was charged. */
+export class ConnectionError extends Error {
+  constructor(message = 'Connection lost') {
+    super(message);
+    this.name = 'ConnectionError';
+  }
+}
+
 /**
  * Where spin results come from. Local today (math-core in the browser),
  * a remote game server (RGS) later. Views and controllers don't change.

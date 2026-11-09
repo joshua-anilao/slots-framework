@@ -58,6 +58,12 @@ export class DebugPanel {
     spinStyle.addEventListener('change', () => { this.view.spinStyle = spinStyle.value as 'drop'; this.say(`Spin style: ${spinStyle.value}`); });
 
     const balance = el('input', { type: 'number', step: '1', value: '10000' }) as HTMLInputElement;
+    const spinSvc = this.game.services.spin;
+    const latency = el('input', { type: 'range', min: '0', max: '1500', step: '50', value: String(spinSvc.latency) }) as HTMLInputElement;
+    const latencyVal = el('span.dbg-val', { text: `${spinSvc.latency} ms` });
+    latency.addEventListener('input', () => { spinSvc.setLatency(Number(latency.value)); latencyVal.textContent = `${latency.value} ms`; });
+    const offline = el('input', { type: 'checkbox' }) as HTMLInputElement;
+    offline.addEventListener('change', () => { spinSvc.setOffline(offline.checked); this.say(offline.checked ? 'Next spins fail: offline' : 'Back online'); });
 
     this.panel.append(
       el('div.dbg-head', {}, [el('b', { text: 'Debug (this session only)' }), el('button', { text: '✕', onclick: () => this.toggle() })]),
@@ -82,6 +88,12 @@ export class DebugPanel {
       el('div.dbg-sec', { text: 'Wallet' }),
       el('label.dbg-row', {}, [el('span', { text: 'Set balance' }), balance,
         el('button', { text: 'Set', onclick: () => this.setBalance(Number(balance.value)) })]),
+      el('div.dbg-sec', { text: 'Network (simulated)' }),
+      el('label.dbg-row', {}, [el('span', { text: 'Server delay' }), latency, latencyVal]),
+      el('label.dbg-row', {}, [el('span', { text: 'Offline' }), offline]),
+      el('div.dbg-btns', {}, [
+        el('button', { text: 'Interrupt round (reload mid-spin)', onclick: () => { this.toggle(); void this.game.controllers.spin.spinOnce(); setTimeout(() => location.reload(), 900); } }),
+      ]),
       el('div.dbg-sec', { text: 'Session stats' }),
       this.statsEl,
       el('button', { text: 'Reset stats', onclick: () => { this.stats = { rounds: 0, cost: 0, win: 0, fs: 0, biggest: 0 }; this.renderStats(); } }),

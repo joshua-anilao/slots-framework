@@ -323,3 +323,72 @@ body.fs .fs-title { display: flex; }
 .check .box { width: 32px; height: 32px; border-radius: 8px; border: 2px solid var(--muted); display: grid; place-items: center; }
 .check.on .box { background: var(--gold); border-color: var(--gold); }
 .check.on .box::after { content: "✓"; color: #3b2300; font-weight: 900; font-size: 22px; }
+
+/* AUTO: hold to open options (fill rises while held); gold while auto spin runs */
+.auto-btn { position: relative; overflow: hidden; touch-action: none; -webkit-touch-callout: none; }
+.auto-btn > * { position: relative; }
+.auto-btn > .hold-fill { position: absolute; inset: 0; transform: scaleY(0); transform-origin: bottom; background: rgba(245,197,66,.45); }
+.auto-btn.on { background: linear-gradient(#ffe48a, var(--gold)); border-color: #fff6c8; }
+.auto-btn.on .ic, .auto-btn.on .lb { color: #3b2300; }
+/* Pause icon: two rounded bars, drawn in CSS so it stays crisp and centred */
+.auto-ic.pause { width: 36px; height: 36px; display: flex; justify-content: center; gap: 8px; }
+.auto-ic.pause::before, .auto-ic.pause::after { content: ""; width: 11px; height: 36px; border-radius: 3px; background: currentColor; }
+.auto-hint { font-size: 17px; color: var(--muted); text-align: center; margin-top: 12px; }
+
+/* --- Drop 2c: menu, settings, rules, history, connection --- */
+.wifi.bars-2 i:nth-child(3), .wifi.bars-1 i:nth-child(n+2) { background: rgba(255,255,255,.2); }
+.wifi.bars-2 i { background: #facc15; } .wifi.bars-2 i:nth-child(3) { background: rgba(255,255,255,.2); }
+.wifi.bars-1 i:nth-child(1) { background: #f97316; }
+.wifi.bars-0 i { background: #ef4444; opacity: .6; }
+.offline-bar { position: absolute; left: 0; right: 0; top: 52px; z-index: 25; padding: 14px 20px; text-align: center; font-size: 22px; font-weight: 800;
+  background: #b91c1c; color: #fff; opacity: 0; visibility: hidden; transform: translateY(-24px);
+  transition: transform .3s ease, opacity .3s ease, visibility 0s .3s; pointer-events: none; }
+.offline-bar.show { opacity: 1; visibility: visible; transform: none; transition: transform .3s ease, opacity .3s ease; }
+
+.modal.tall .modal-panel { max-height: 92%; display: flex; flex-direction: column; }
+.modal.tall .modal-body { overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding-bottom: 10px; }
+.menu-item { width: 100%; display: flex; align-items: center; gap: 18px; padding: 22px 16px; font-size: 28px; font-weight: 800;
+  border-radius: 18px; background: rgba(255,255,255,.06); margin-bottom: 12px; text-align: left; }
+.menu-item:active { background: rgba(255,255,255,.14); }
+.mi-ic { width: 44px; text-align: center; font-size: 30px; }
+.mi-go { margin-left: auto; color: var(--gold); font-size: 40px; }
+
+.set-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 4px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.set-label { font-size: 24px; font-weight: 700; }
+.set-note { font-size: 17px; color: var(--muted); margin-top: 4px; }
+.set-block { margin: 22px 4px 12px; color: var(--muted); font-size: 20px; letter-spacing: 2px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.seg-opt { height: 64px; border-radius: 16px; background: rgba(255,255,255,.08); font-size: 22px; font-weight: 800; }
+.seg-opt.on { background: var(--gold); color: #3b2300; }
+
+.mini-cell { width: 120px; height: 142px; zoom: .42; flex: none; }
+.mini-cell .sym { position: relative; left: 0; margin: 0; top: 0 !important; animation: none; }
+.mini-cell.inline { display: inline-block; vertical-align: middle; margin-right: 24px; }
+.rule { margin-bottom: 26px; }
+.rule-head { font-size: 20px; font-weight: 900; letter-spacing: 2px; color: var(--gold); margin-bottom: 10px; }
+.rule p { font-size: 21px; line-height: 1.45; margin: 0 0 10px; color: var(--text); }
+.pay-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.pay-card { display: flex; align-items: center; gap: 16px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,.05); }
+.pay-lines { font-size: 20px; line-height: 1.5; } .pay-lines b { color: var(--gold); }
+.rule-ver { font-size: 15px; color: var(--muted); text-align: center; margin: 10px 0; }
+
+.hist-chips { grid-template-columns: repeat(4, 1fr); }
+.hist-search { width: 100%; height: 56px; margin: 6px 0 12px; border-radius: 14px; border: 2px solid rgba(255,255,255,.15); background: rgba(0,0,0,.3);
+  color: var(--text); font: inherit; font-size: 22px; padding: 0 16px; }
+.hist-sum { display: flex; justify-content: space-between; font-size: 20px; color: var(--muted); margin: 0 4px 10px; }
+.pos { color: #4ade80; } .neg { color: #f87171; } .zero { color: var(--muted); }
+.hist-row { width: 100%; text-align: left; padding: 14px 16px; border-radius: 14px; background: rgba(255,255,255,.05); margin-bottom: 8px; }
+.hist-row:active { background: rgba(255,255,255,.12); }
+.hr-top { display: flex; justify-content: space-between; font-size: 21px; }
+.hr-net { font-weight: 900; }
+.hr-bot { display: flex; gap: 10px; align-items: center; font-size: 18px; color: var(--muted); margin-top: 4px; }
+.hr-id { font-size: 15px; color: rgba(255,255,255,.35); margin-top: 4px; }
+.tag { font-size: 14px; font-weight: 900; padding: 2px 8px; border-radius: 6px; background: var(--gold); color: #3b2300; }
+.tag.fs { background: #29d3c0; color: #002b28; }
+.hist-empty { text-align: center; color: var(--muted); font-size: 22px; padding: 40px 0; }
+.hist-tz { font-size: 15px; color: var(--muted); text-align: center; margin-top: 8px; }
+.rd-head { font-size: 19px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; } .rd-head b { color: var(--win); }
+.rd-spin { padding: 14px; border-radius: 16px; background: rgba(255,255,255,.05); margin-bottom: 12px; }
+.rd-label { display: flex; justify-content: space-between; font-size: 22px; font-weight: 800; margin-bottom: 10px; }
+.rd-grid { display: grid; grid-template-columns: repeat(5, max-content); gap: 4px; justify-content: center; }
+.rd-steps { font-size: 18px; color: var(--muted); margin-top: 10px; line-height: 1.5; }

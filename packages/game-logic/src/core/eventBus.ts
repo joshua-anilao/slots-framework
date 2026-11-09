@@ -10,6 +10,10 @@ export interface GameEvents {
   freeSpinsTriggered: { spins: number };
   insufficientFunds: { needed: number; balance: number };
   spinFailed: { message: string };
+  /** The spin request could not reach the server. Nothing was charged. */
+  connectionLost: { message: string };
+  /** A round that was cut off (page closed mid-animation) is being shown again. */
+  roundResumed: { roundId: string };
   autoSpinStopped: { reason: AutoSpinStopReason };
   betChanged: { bet: number };
   debugOverridesChanged: { active: boolean; changed: string[] };

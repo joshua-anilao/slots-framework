@@ -6,7 +6,7 @@ import type { WalletModel } from '../models/walletModel';
 import { winTierFor } from '../models/winTiers';
 import type { WinTierThresholds } from '../models/winTiers';
 import type { IRoundPresenter } from './roundPresenter';
-import { InsufficientFundsError } from '../services/spinService';
+import { ConnectionError, InsufficientFundsError } from '../services/spinService';
 import type { ISpinService, SpinRequest, SpinResponse } from '../services/spinService';
 import type { ForceOptions } from '@slots/math-core';
 
@@ -72,17 +72,36 @@ export class SpinController {
       this.spin.phase.set('idle');
       if (err instanceof InsufficientFundsError) {
         this.bus.publish('insufficientFunds', { needed: err.needed, balance: err.balance });
+      } else if (err instanceof ConnectionError) {
+        this.bus.publish('connectionLost', { message: err.message });
       } else {
         this.bus.publish('spinFailed', { message: err instanceof Error ? err.message : String(err) });
       }
       return null;
     }
 
-    const r = response.result;
     this.spin.lastRoundId.set(response.roundId);
-    this.bus.publish('spinResolved', { roundId: response.roundId, result: r, balanceAfter: response.balanceAfter });
-    if (r.freeSpins) this.bus.publish('freeSpinsTriggered', { spins: r.freeSpins.awarded });
+    this.bus.publish('spinResolved', { roundId: response.roundId, result: response.result, balanceAfter: response.balanceAfter });
+    if (response.result.freeSpins) this.bus.publish('freeSpinsTriggered', { spins: response.result.freeSpins.awarded });
+    return this.present(response);
+  }
 
+  /**
+   * Interrupted round: the server already played and paid it, but the player never saw it
+   * (page closed mid-animation). Shows it again from the start, then lands on the final balance.
+   */
+  async resume(response: SpinResponse): Promise<SpinResponse | null> {
+    if (this.spin.isBusy) return null;
+    this.spin.phase.set('requesting');
+    this.spin.lastWin.set(0);
+    this.spin.lastRoundId.set(response.roundId);
+    this.wallet.balance.set(Math.round((response.balanceBefore - response.result.cost) * 100) / 100);
+    this.bus.publish('roundResumed', { roundId: response.roundId });
+    return this.present(response);
+  }
+
+  private async present(response: SpinResponse): Promise<SpinResponse> {
+    const r = response.result;
     this.spin.phase.set('presenting');
     try {
       await this.presenter.present(response, this.speed.mode.value);

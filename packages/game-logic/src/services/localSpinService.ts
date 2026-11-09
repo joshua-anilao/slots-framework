@@ -2,7 +2,7 @@ import { round2, SeededRng, SlotEngine } from '@slots/math-core';
 import type { GameConfig, IRng } from '@slots/math-core';
 import type { IConfigService } from './configService';
 import type { LocalHistoryService } from './historyService';
-import { InsufficientFundsError } from './spinService';
+import { ConnectionError, InsufficientFundsError } from './spinService';
 import type { ISpinService, SpinRequest, SpinResponse } from './spinService';
 import type { LocalWallet } from './walletService';
 
@@ -26,6 +26,9 @@ export class LocalSpinService implements ISpinService {
   private readonly rng: IRng;
   private counter = 0;
   private readonly now: () => number;
+  /** Simulated network (prototype debug panel). Server builds measure the real thing. */
+  private latencyMs: number;
+  private offline = false;
 
   constructor(
     private readonly configs: IConfigService,
@@ -37,10 +40,18 @@ export class LocalSpinService implements ISpinService {
     this.engineConfig = configs.config.value;
     this.engine = new SlotEngine(this.engineConfig, this.rng);
     this.now = opts.now ?? Date.now;
+    this.latencyMs = opts.latencyMs ?? 0;
   }
 
+  /** Debug: simulated round trip in ms. */
+  setLatency(ms: number): void { this.latencyMs = Math.max(0, ms); }
+  get latency(): number { return this.latencyMs; }
+  /** Debug: simulate a lost connection. Spins fail with ConnectionError and nothing is charged. */
+  setOffline(v: boolean): void { this.offline = v; }
+
   async spin(req: SpinRequest): Promise<SpinResponse> {
-    if (this.opts.latencyMs) await new Promise(r => setTimeout(r, this.opts.latencyMs));
+    if (this.latencyMs) await new Promise(r => setTimeout(r, this.latencyMs));
+    if (this.offline) throw new ConnectionError();
     const config = this.configs.config.value;
     if (config !== this.engineConfig) {
       // Debug overrides changed: rebuild the engine on the same RNG stream.

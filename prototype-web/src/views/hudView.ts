@@ -1,6 +1,7 @@
 import type { LocalGame, SpeedMode } from '@slots/game-logic';
 import type { GameConfig } from '@slots/math-core';
 import { el } from '../core/dom';
+import { buzz } from '../core/settings';
 import { TIMINGS } from '../core/pace';
 import { money, STRINGS } from '../strings';
 
@@ -101,7 +102,10 @@ export class WinBox {
 export interface HudHandlers {
   onSpin(): void;
   onBet(): void;
+  /** Tap AUTO: start infinite auto spin (or stop it while running). */
   onAuto(): void;
+  /** Hold AUTO: open the Auto Spin options window. */
+  onAutoHold(): void;
   onTurbo(): void;
   onSettings(): void;
   onBuy(): void;
@@ -132,6 +136,11 @@ export class HudView {
   private static turnMs(m: SpeedMode): number { const t = TIMINGS[m]; return t.cardFall + 3 * t.cardStagger; }
   private turboBtn: HTMLButtonElement;
   private autoBtn: HTMLButtonElement;
+  private autoLabel = el('span.lb', { text: STRINGS.auto });
+  /** Auto icon when idle; pause icon while auto play runs (tap = pause). */
+  private autoIcon = el('span.ic.auto-ic', { text: '↻' });
+  /** How long AUTO must be held to open the options (a fill shows the progress). */
+  static readonly HOLD_MS = 500;
   readonly buyBtn: HTMLButtonElement;
   /** Spins left while auto spin runs; the spin button turns into STOP. */
   private autoCount = el('span.auto-count');
@@ -157,7 +166,8 @@ export class HudView {
       el('button.ctl', { onclick: () => h.onSettings() }, [el('span.ic', { text: '☰' }), el('span.lb', { text: 'MENU' })]),
       this.betBtn,
       this.spinBtn,
-      this.autoBtn = el('button.ctl.auto-btn', { onclick: () => h.onAuto() }, [el('span.ic', { text: '↻' }), el('span.lb', { text: STRINGS.auto })]) as HTMLButtonElement,
+      this.autoBtn = this.holdButton(el('button.ctl.auto-btn', {}, [el('span.hold-fill'), this.autoIcon, this.autoLabel]) as HTMLButtonElement,
+        () => h.onAuto(), () => h.onAutoHold()),
       this.turboBtn,
     ]);
     this.soundBtn = el('button.sound-btn', { onclick: () => h.onSound() });
@@ -184,18 +194,52 @@ export class HudView {
       this.spinBtn.disabled = busy && !running;
       this.spinBtn.setAttribute('aria-label', running ? STRINGS.stop : STRINGS.spin);
       this.betBtn.disabled = busy || running;
-      this.autoBtn.disabled = busy || running;
+      // During auto spin AUTO stays live as a second STOP button.
+      this.autoBtn.disabled = busy && !running;
+      this.autoBtn.classList.toggle('on', running);
+      this.autoLabel.textContent = running ? STRINGS.stop : STRINGS.auto;
+      if (this.autoIcon.classList.contains('pause') !== running) {
+        this.autoIcon.classList.toggle('pause', running);
+        this.autoIcon.textContent = running ? '' : '↻';
+        this.autoIcon.animate([{ transform: 'scale(.4)', opacity: 0 }, { transform: 'scale(1.15)', opacity: 1, offset: .7 }, { transform: 'none' }], { duration: 220, easing: 'ease-out' });
+      }
       this.buyBtn.disabled = busy || running;
     };
     game.models.spin.phase.subscribe(lock);
     auto.active.subscribe(lock);
-    auto.remaining.subscribe(n => {
+    const showCount = () => {
+      const n = auto.remaining.value;
       const was = this.autoCount.textContent;
       this.autoCount.textContent = auto.active.value ? (n === Infinity ? '∞' : String(n)) : '';
       if (was && was !== this.autoCount.textContent) this.autoCount.animate([{ transform: 'scale(1.3)' }, { transform: 'none' }], { duration: 220 });
-    });
+    };
+    auto.remaining.subscribe(showCount);
+    auto.active.subscribe(showCount);
     game.models.speed.mode.subscribe(m => this.showSpeed(m));
     this.mult.mode(false);
+  }
+
+  /** Tap runs onTap; holding for HOLD_MS runs onHold instead (with a fill showing the hold). */
+  private holdButton(btn: HTMLButtonElement, onTap: () => void, onHold: () => void): HTMLButtonElement {
+    let timer = 0;
+    let held = false;
+    let fill: Animation | null = null;
+    const cancel = () => { clearTimeout(timer); timer = 0; fill?.cancel(); fill = null; };
+    btn.addEventListener('pointerdown', () => {
+      if (btn.disabled) return;
+      held = false;
+      cancel();
+      if (btn.classList.contains('on')) return; // running: a tap stops, no hold menu
+      fill = btn.querySelector('.hold-fill')!.animate([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }],
+        { duration: HudView.HOLD_MS, easing: 'linear', fill: 'forwards' });
+      timer = window.setTimeout(() => { held = true; cancel(); buzz(15); onHold(); }, HudView.HOLD_MS);
+    });
+    btn.addEventListener('pointerup', cancel);
+    btn.addEventListener('pointerleave', cancel);
+    btn.addEventListener('pointercancel', cancel);
+    btn.addEventListener('contextmenu', e => e.preventDefault()); // long-press on phones
+    btn.addEventListener('click', () => { if (held) { held = false; return; } onTap(); });
+    return btn;
   }
 
   /** Circular arrow drawn around the exact centre of the button. */

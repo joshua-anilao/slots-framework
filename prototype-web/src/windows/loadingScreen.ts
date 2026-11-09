@@ -3,10 +3,10 @@ import { STRINGS } from '../strings';
 
 const SKIP_KEY = 'slots.game001.skipIntro';
 
-function readSkip(): boolean {
+export function readSkip(): boolean {
   try { return localStorage.getItem(SKIP_KEY) === '1'; } catch { return false; }
 }
-function writeSkip(v: boolean): void {
+export function writeSkip(v: boolean): void {
   try { if (v) localStorage.setItem(SKIP_KEY, '1'); else localStorage.removeItem(SKIP_KEY); } catch { /* private mode */ }
 }
 
@@ -26,16 +26,24 @@ export class LoadingScreen {
   private dots = el('div.tut-dots');
   private continueBtn = el('button.primary.load-go', { text: STRINGS.continue }) as HTMLButtonElement;
   private slide = 0;
+  /** Position on the track, counting the copies: 0 = copy of last, 1..n = pages, n+1 = copy of first. */
+  private pos = 1;
   private timer = 0;
+  /** Tutorial turns to the next page by itself this often; any tap or drag restarts the wait. */
+  static readonly AUTO_MS = 4000;
   private skip = readSkip();
 
   constructor(title: string, volatility: number) {
     const slides = STRINGS.tutorial;
-    this.track.append(...slides.map((s, i) => el('div.tut-slide', {}, [
+    const pages = slides.map((s, i) => el('div.tut-slide', {}, [
       el(`div.tut-pic.p${i}`, {}, LoadingScreen.pic(i)),
       el('div.tut-head', { text: s.title }),
       el('div.tut-text', { text: s.text }),
-    ])));
+    ]));
+    // Endless loop: a copy of the last page sits before the first and a copy of the first after the last.
+    // Sliding onto a copy, then jumping (unseen) to the real page, means it never rewinds to the start.
+    this.track.append(pages[pages.length - 1].cloneNode(true), ...pages, pages[0].cloneNode(true));
+    this.track.addEventListener('transitionend', () => this.settle());
     this.dots.append(...slides.map((_, i) => el('button.tut-dot', { 'aria-label': `${i + 1}`, onclick: () => this.go(i) })));
     const check = el('button.check', { 'aria-pressed': String(this.skip) }, [el('span.box'), el('span', { text: STRINGS.dontShow })]);
     check.classList.toggle('on', this.skip);
@@ -60,6 +68,7 @@ export class LoadingScreen {
       el('div.load-slot', {}, [this.barBox, this.continueBtn]), check,
     ]);
     this.swipe();
+    this.place(1, false);
     this.go(0);
   }
 
@@ -74,25 +83,74 @@ export class LoadingScreen {
     }
   }
 
-  private go(i: number): void {
-    const n = STRINGS.tutorial.length;
-    this.slide = (i + n) % n;
-    this.track.style.transform = `translateX(${-this.slide * 100}%)`;
-    Array.from(this.dots.children).forEach((d, k) => d.classList.toggle('on', k === this.slide));
-    clearInterval(this.timer);
-    this.timer = window.setInterval(() => this.go(this.slide + 1), 3500);
+  private place(pos: number, animate: boolean): void {
+    this.pos = pos;
+    this.track.style.transition = animate ? '' : 'none';
+    this.track.style.transform = `translateX(${-pos * 100}%)`;
+    if (!animate) void this.track.offsetWidth; // apply the jump before any next slide animates
   }
 
-  private swipe(): void {
-    let x0: number | null = null;
-    this.root.addEventListener('pointerdown', e => { if ((e.target as Element).closest('.tut')) x0 = e.clientX; });
-    this.root.addEventListener('pointerup', e => {
-      if (x0 === null) return;
-      const dx = e.clientX - x0;
-      x0 = null;
-      if (Math.abs(dx) > 30) this.go(this.slide + (dx < 0 ? 1 : -1));
-    });
+  /** After sliding onto a copy, jump to the real page it shows. */
+  private settle(): void {
+    const n = STRINGS.tutorial.length;
+    if (this.pos === 0) this.place(n, false);
+    else if (this.pos === n + 1) this.place(1, false);
   }
+
+  /** Slide to page i. i = -1 or n slides one step onto the copy, so it keeps going the same way. */
+  private go(i: number): void {
+    const n = STRINGS.tutorial.length;
+    this.settle(); // a fast second tap may land before the first slide finished
+    const step = Math.max(-1, Math.min(n, i));
+    this.slide = (step + n) % n;
+    this.place(step + 1, step + 1 !== this.pos);
+    Array.from(this.dots.children).forEach((d, k) => d.classList.toggle('on', k === this.slide));
+    clearInterval(this.timer);
+    this.timer = window.setInterval(() => this.go(this.slide + 1), LoadingScreen.AUTO_MS);
+  }
+
+  /**
+   * Drag: the page follows the finger, so the next (or previous) page is half visible midway.
+   * Let go past a quarter of the width, or with a quick flick, to change page; otherwise it springs back.
+   */
+  private swipe(): void {
+    const tut = this.track.parentElement!;
+    let x0 = 0;
+    let t0 = 0;
+    let dx = 0;
+    let dragging = false;
+    tut.addEventListener('pointerdown', e => {
+      dragging = true;
+      dx = 0;
+      x0 = e.clientX;
+      t0 = performance.now();
+      clearInterval(this.timer);
+      this.settle();
+      this.track.style.transition = 'none';
+      tut.setPointerCapture(e.pointerId);
+    });
+    tut.addEventListener('pointermove', e => {
+      if (!dragging) return;
+      const scale = tut.getBoundingClientRect().width / tut.offsetWidth; // the stage is scaled to fit the screen
+      dx = (e.clientX - x0) / scale;
+      const max = tut.offsetWidth; // never more than one page either way
+      dx = Math.max(-max, Math.min(max, dx));
+      this.track.style.transform = `translateX(calc(${-this.pos * 100}% + ${dx}px))`;
+    });
+    const end = () => {
+      if (!dragging) return;
+      dragging = false;
+      const fast = Math.abs(dx) > 30 && performance.now() - t0 < 250;
+      if (Math.abs(dx) > tut.offsetWidth * 0.25 || fast) this.go(this.slide + (dx < 0 ? 1 : -1));
+      else {
+        this.place(this.pos, true); // spring back to the same page
+        this.timer = window.setInterval(() => this.go(this.slide + 1), LoadingScreen.AUTO_MS);
+      }
+    };
+    tut.addEventListener('pointerup', end);
+    tut.addEventListener('pointercancel', end);
+  }
+
 
   /** Runs each load step, moving the bar. Resolves when the player continues (or at once if they opted out). */
   async run(host: HTMLElement, steps: LoadStep[], minMs = 900): Promise<void> {

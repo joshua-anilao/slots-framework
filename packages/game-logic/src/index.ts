@@ -22,7 +22,7 @@ export { BuyBonusController } from './controllers/buyBonusController';
 export { InstantPresenter } from './controllers/roundPresenter';
 export type { IRoundPresenter } from './controllers/roundPresenter';
 
-export { InsufficientFundsError } from './services/spinService';
+export { ConnectionError, InsufficientFundsError } from './services/spinService';
 export type { ISpinService, SpinRequest, SpinResponse } from './services/spinService';
 export { LocalSpinService } from './services/localSpinService';
 export type { LocalSpinOptions } from './services/localSpinService';
