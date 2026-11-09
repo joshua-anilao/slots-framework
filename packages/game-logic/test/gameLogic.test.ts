@@ -125,7 +125,7 @@ describe('helpers', () => {
     for (let i = 0; i < 20; i++) {
       const item = feed.next();
       expect(item.simulated).toBe(true);
-      expect(item.name).toMatch(/^[A-Z]{3}\*{4}$/);
+      expect(item.name).toMatch(/^\w{3,10}\*{3}$/); // masked handle, e.g. gamblingPl***
     }
   });
 

@@ -1,0 +1,17 @@
+{
+  "name": "@slots/prototype-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview --host"
+  },
+  "dependencies": {
+    "@slots/math-core": "0.1.0",
+    "@slots/game-logic": "0.1.0"
+  },
+  "devDependencies": {
+    "vite": "7.1.12"
+  }
+}

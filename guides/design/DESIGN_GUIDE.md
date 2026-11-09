@@ -11,12 +11,21 @@ The general **feeling** of our games. Per-game differences go in `games/<id>/gui
 
 ## 2. Pacing (all values in config)
 
+Normal speed is matched to the reference gameplay video (Josh, 2026-11-09), measured frame by frame. Source of truth in code: `prototype-web/src/core/pace.ts`.
+
 | Moment | Normal | Turbo | Super turbo |
 |---|---|---|---|
-| Reel spin to all stopped | 1.2 s | 0.6 s | 0.3 s |
-| Win highlight per cascade step | 0.6 s | 0.35 s | 0.2 s |
-| Symbol pop + drop | 0.4 s | 0.25 s | 0.15 s |
-| Big win count-up | 3–6 s (skippable) | 2–3 s | 1.5 s |
+| Spin: old cards fall out | 0.2 s | 0.12 s | 0.08 s |
+| Spin: new cards drop in (reel by reel, bottom card first) | ~0.8 s | ~0.4 s | ~0.2 s |
+| Anticipation, per remaining reel (2+ scatters) | +0.6 s, one reel at a time under a spotlight | off | off |
+| Win highlight (winning cards glow, rest dim, amount shown) | 1.0 s | 0.55 s | 0.3 s |
+| Winning cards burst | 0.4 s | 0.25 s | 0.15 s |
+| Cascade drop | 0.3 s | 0.2 s | 0.12 s |
+| Gold card back → WILD reveal (after the drop) | 0.3 s | 0.18 s | 0.1 s |
+| Whole cascade step | ~2.2–2.5 s | ~1.2 s | ~0.7 s |
+| Scatter celebration before free spins | 2.0 s | 1.2 s | 0.7 s |
+| Free spins intro banner | 2.2 s + ladder sweep 1.4 s | 1.5 s | 1.0 s |
+| Big win / free spins total count-up | 4 s (skippable) | 2.5 s | 1.5 s |
 
 - **Tap to stop / skip:** tapping during a spin slams reels; tapping during a count-up jumps to the final amount.
 - **Anticipation:** with 2 scatters landed, remaining reels slow and glow (normal speed only). Never changes the outcome.

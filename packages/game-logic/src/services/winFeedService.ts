@@ -1,6 +1,6 @@
 import type { IRng } from '@slots/math-core';
 
-/** One "JOS**** just won ₱15,000!" message. */
+/** One "gamblingPl*** won ₱55,000" message. */
 export interface WinFeedItem {
   name: string;
   amount: number;
@@ -22,7 +22,9 @@ export interface IWinFeedService {
 export class SimulatedWinFeedService implements IWinFeedService {
   private listeners = new Set<(item: WinFeedItem) => void>();
   private timer: ReturnType<typeof setTimeout> | null = null;
-  private static readonly PREFIXES = ['JOS', 'MAR', 'ANA', 'KEN', 'RIC', 'LIZ', 'JUN', 'BEA', 'PAO', 'CHR', 'MIG', 'TIN'];
+  /** Made-up player handles; shown masked (first part + ***), like a real feed would. */
+  private static readonly HANDLES = ['gamblingPlayer', 'luckyJuan88', 'manilaKing', 'reynaLuzon', 'bossMikeQC', 'tita_Bea', 'pinoySpinner',
+    'cebuAce777', 'mayamanSoon', 'kuyaRicky', 'davaoDreamer', 'jackpotJen', 'swerteSiAko', 'bigwinBen'];
 
   constructor(
     private readonly rng: IRng,
@@ -51,10 +53,13 @@ export class SimulatedWinFeedService implements IWinFeedService {
 
   /** Builds one simulated item (exposed for tests). */
   next(): WinFeedItem {
-    const p = SimulatedWinFeedService.PREFIXES;
-    const name = p[this.rng.nextInt(p.length)] + '****';
-    const bet = this.bets[this.rng.nextInt(this.bets.length)];
-    const winX = [20, 30, 50, 80, 120, 250, 500][this.rng.nextInt(7)];
+    const h = SimulatedWinFeedService.HANDLES;
+    const handle = h[this.rng.nextInt(h.length)];
+    const name = handle.slice(0, Math.min(10, handle.length - 2)) + '***';
+    // Bigger bets and wins make the feed feel social ("gamblingPl*** won ₱55,000").
+    const high = this.bets.slice(Math.floor(this.bets.length / 2));
+    const bet = high[this.rng.nextInt(high.length)];
+    const winX = [50, 80, 110, 150, 250, 500, 1000][this.rng.nextInt(7)];
     return { name, amount: bet * winX, simulated: true };
   }
 

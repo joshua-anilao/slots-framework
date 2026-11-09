@@ -72,15 +72,18 @@ How the reels physically spin and stop. The outcome is already decided by the ma
 
 | Part | Behaviour | Config |
 |---|---|---|
-| Start | All 5 reels kick up slightly then spin down, left to right with a small delay | kick height, start stagger |
-| Spinning | Symbols scroll fast with motion blur (blurred symbol frames from atlas) | spin speed |
-| Stop order | Reels stop left → right with a short gap; each lands on the result symbols | stop gap per speed mode |
-| Landing | Small bounce on stop + "thunk" sound | bounce strength |
-| Anticipation | If 2 scatters have landed, remaining reels spin longer and glow (normal speed only) | extra time |
-| Tap to stop | Tapping Spin while spinning slams all reels to stop at once | on/off |
-| Turbo / super turbo | Shorter spin and stop gaps (design guide pacing table) | timing sets |
-| Cascade refill | After wins pop, symbols above drop down and new ones fall in from the top (not a full spin) | drop speed, stagger |
-| Free spins | Same spin, free spins skin and ladder | — |
+| Style | **Card drop** (default for Game 001, matches the reference video): old cards fall out of the grid, new cards drop in reel by reel, bottom card first. **Scrolling reels** is the alternative (debug panel: Spin style) | `spinStyle` |
+| Stop order | Reels land left → right with a short stagger | reel stagger per speed |
+| Landing | Small bounce + "thunk" sound per reel; rising "ding" per scatter | card fall time |
+| Anticipation | 2 scatters landed: the board dims (scatters stay lit and pulse) and each remaining reel drops alone, slowly, inside a light beam (normal speed only) | time per reel |
+| Win | Winning cards glow, others go dark; the win amount pops over the winning cards, flies into the WIN box, then WIN updates | highlight time |
+| Burst | Winning cards burst into sparkles; winning **gold** cards flip to a card back instead | pop time |
+| Cascade refill | Cards above drop into the gaps, new ones fall in from the top (not a full spin); card backs then flip to **WILD** | drop + reveal time |
+| Free spins trigger | Board dims, scatters pulse (~2 s), then "CONGRATULATIONS! YOU WON 10 FREE SPINS" with the free spins ladder, then the ladder sweeps x2 → x10 | celebrate, banner |
+| During free spins | The game title is replaced by **FREE SPINS LEFT 7 / 10** | — |
+| Free spins end | "CONGRATULATIONS! YOU HAVE WON" with a count-up and coins | count-up time |
+| Tap to stop | Tapping Spin while cards drop slams them all into place | on/off |
+| Turbo / super turbo | Shorter everything (design guide pacing table) | timing sets |
 
 Implementation: one `ReelView` per column with a symbol strip that recycles symbol objects (pooling), driven by a `ReelSpinController` that receives the target grid from the Spin Result. Works with sprite or Spine symbols.
 
