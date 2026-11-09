@@ -1,0 +1,59 @@
+{
+  "game": {
+    "id": "game-001",
+    "name": "Game 001 (working title)",
+    "version": "0.1.0"
+  },
+  "variant": "A",
+  "seed": 20261109,
+  "rounds": 1000000,
+  "createdAt": "2026-11-09T14:33:11.571Z",
+  "rtp": 0.9772595590001032,
+  "rtpBase": 0.6208145922000662,
+  "rtpFreeSpins": 0.3564176071999998,
+  "rtpCi90": 0.01192253324674873,
+  "hitFrequency": 0.385718,
+  "freeSpinsOneIn": 137.38150844896276,
+  "volatilityIndex": 7.247740575531142,
+  "maxWinX": 820.383,
+  "capHits": 0,
+  "buyBonusRtp": 0.950251174599994,
+  "session": {
+    "sessions": 2000,
+    "balance": 1000,
+    "bet": 10,
+    "maxSpins": 500,
+    "avgSpins": 380.8775,
+    "medianSpins": 477,
+    "bustRate": 0.509,
+    "profitRate": 0.322,
+    "avgEndBalance": 955.7449850000007,
+    "bestEndBalance": 11276.220000000005
+  },
+  "checks": [
+    {
+      "name": "RTP",
+      "value": "97.73%",
+      "target": "96.50% ± 1.19%",
+      "pass": false
+    },
+    {
+      "name": "Hit frequency",
+      "value": "38.57%",
+      "target": "30.00% - 45.00%",
+      "pass": true
+    },
+    {
+      "name": "Free spins frequency",
+      "value": "1 in 137",
+      "target": "1 in 120 - 200",
+      "pass": true
+    },
+    {
+      "name": "Buy bonus RTP",
+      "value": "95.03%",
+      "target": "96.50% ± 2.00%",
+      "pass": true
+    }
+  ]
+}

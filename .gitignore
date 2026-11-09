@@ -1,0 +1,24 @@
+# Node / build
+node_modules/
+dist/
+coverage/
+*.log
+.vite/
+
+# Simulator large outputs (keep summary reports, ignore raw dumps)
+games/*/reports/raw/
+
+# Cocos Creator (Track 2)
+client-cocos/library/
+client-cocos/temp/
+client-cocos/local/
+client-cocos/build/
+client-cocos/profiles/
+client-cocos/native/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/

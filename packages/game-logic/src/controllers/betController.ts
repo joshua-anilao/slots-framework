@@ -1,0 +1,20 @@
+import type { EventBus } from '../core/eventBus';
+import type { BetModel } from '../models/betModel';
+import type { SpinModel } from '../models/spinModel';
+
+/** Changes the bet. Not allowed while a round is running. */
+export class BetController {
+  constructor(private readonly model: BetModel, private readonly spin: SpinModel, private readonly bus: EventBus) {}
+
+  increase(): boolean { return this.select(this.model.index.value + 1); }
+  decrease(): boolean { return this.select(this.model.index.value - 1); }
+
+  /** Picks a bet level by index. Returns false if not allowed. */
+  select(index: number): boolean {
+    if (this.spin.isBusy || index < 0 || index >= this.model.levels.length) return false;
+    if (index === this.model.index.value) return true;
+    this.model.index.set(index);
+    this.bus.publish('betChanged', { bet: this.model.bet });
+    return true;
+  }
+}

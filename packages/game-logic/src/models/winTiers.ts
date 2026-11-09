@@ -1,0 +1,19 @@
+/** Win celebration tiers from the design guide. */
+export type WinTier = 'none' | 'big' | 'super' | 'ultra';
+
+/** Thresholds as multiples of the bet (config, not code). */
+export interface WinTierThresholds {
+  big: number;
+  super: number;
+  ultra: number;
+}
+
+export const DEFAULT_WIN_TIERS: WinTierThresholds = { big: 10, super: 25, ultra: 50 };
+
+/** Which celebration a win gets. */
+export function winTierFor(winX: number, t: WinTierThresholds = DEFAULT_WIN_TIERS): WinTier {
+  if (winX >= t.ultra) return 'ultra';
+  if (winX >= t.super) return 'super';
+  if (winX >= t.big) return 'big';
+  return 'none';
+}

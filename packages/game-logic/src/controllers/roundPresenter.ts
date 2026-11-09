@@ -1,0 +1,18 @@
+import type { SpinResponse } from '../services/spinService';
+import type { SpeedMode } from '../models/speedModel';
+
+/**
+ * Implemented by the View layer (HTML or Cocos): plays a round back
+ * (reels, cascades, wins, free spins, big win) and resolves when done.
+ */
+export interface IRoundPresenter {
+  present(response: SpinResponse, speed: SpeedMode): Promise<void>;
+  /** Player tapped to skip / slam stop. The presenter jumps to the end. */
+  skip(): void;
+}
+
+/** Presenter that shows nothing (for tests and headless use). */
+export class InstantPresenter implements IRoundPresenter {
+  async present(): Promise<void> {}
+  skip(): void {}
+}

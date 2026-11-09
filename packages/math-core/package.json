@@ -1,0 +1,9 @@
+{
+  "name": "@slots/math-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Engine-agnostic slot math: RNG, reels, ways evaluation, cascades, multipliers, features. No engine or DOM imports.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

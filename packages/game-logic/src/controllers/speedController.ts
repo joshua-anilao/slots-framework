@@ -1,0 +1,14 @@
+import type { SpeedMode, SpeedModel } from '../models/speedModel';
+
+const ORDER: SpeedMode[] = ['normal', 'turbo', 'super'];
+
+/** Turbo button: normal → turbo → super turbo → normal. */
+export class SpeedController {
+  constructor(private readonly model: SpeedModel) {}
+  cycle(): SpeedMode {
+    const next = ORDER[(ORDER.indexOf(this.model.mode.value) + 1) % ORDER.length];
+    this.model.mode.set(next);
+    return next;
+  }
+  set(mode: SpeedMode): void { this.model.mode.set(mode); }
+}

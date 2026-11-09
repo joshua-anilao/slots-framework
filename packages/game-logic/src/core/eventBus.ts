@@ -1,0 +1,36 @@
+import type { RoundResult } from '@slots/math-core';
+import type { WinTier } from '../models/winTiers';
+
+/** Every event the game publishes. Modules talk through these instead of calling each other. */
+export interface GameEvents {
+  spinStarted: { bet: number; buyBonus: boolean };
+  spinResolved: { roundId: string; result: RoundResult; balanceAfter: number };
+  roundPresented: { roundId: string; totalWin: number };
+  winTier: { tier: WinTier; winX: number; amount: number };
+  freeSpinsTriggered: { spins: number };
+  insufficientFunds: { needed: number; balance: number };
+  spinFailed: { message: string };
+  autoSpinStopped: { reason: AutoSpinStopReason };
+  betChanged: { bet: number };
+  debugOverridesChanged: { active: boolean; changed: string[] };
+}
+
+export type AutoSpinStopReason = 'finished' | 'player' | 'feature' | 'bigWin' | 'balanceDrop' | 'insufficientFunds' | 'error';
+
+/** Typed publish/subscribe bus. */
+export class EventBus {
+  private handlers = new Map<keyof GameEvents, Set<(e: never) => void>>();
+
+  on<K extends keyof GameEvents>(type: K, fn: (e: GameEvents[K]) => void): () => void {
+    let set = this.handlers.get(type);
+    if (!set) { set = new Set(); this.handlers.set(type, set); }
+    set.add(fn as (e: never) => void);
+    return () => { set!.delete(fn as (e: never) => void); };
+  }
+
+  publish<K extends keyof GameEvents>(type: K, event: GameEvents[K]): void {
+    const set = this.handlers.get(type);
+    if (!set) return;
+    for (const fn of [...set]) (fn as (e: GameEvents[K]) => void)(event);
+  }
+}

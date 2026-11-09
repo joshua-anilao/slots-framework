@@ -1,0 +1,11 @@
+{
+  "name": "@slots/simulator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node CLI that runs math-core millions of times and writes an RTP report and PAR sheet.",
+  "type": "module",
+  "main": "src/index.ts",
+  "dependencies": {
+    "@slots/math-core": "0.1.0"
+  }
+}

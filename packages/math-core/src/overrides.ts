@@ -1,0 +1,31 @@
+import type { GameConfig } from './config';
+import { validateConfig } from './validateConfig';
+
+/** A partial config: only the values to change. Arrays replace, objects merge. */
+export type ConfigOverrides = DeepPartial<GameConfig>;
+
+export type DeepPartial<T> = T extends (infer U)[] ? U[] : T extends object ? { [K in keyof T]?: DeepPartial<T[K]> } : T;
+
+/**
+ * Returns a NEW config with the overrides applied (the original is untouched),
+ * plus the list of changed paths. Used by the debug panel for session-only tweaks.
+ */
+export function applyOverrides(base: GameConfig, overrides: ConfigOverrides): { config: GameConfig; changed: string[] } {
+  const changed: string[] = [];
+  const config = merge(structuredClone(base), overrides, '', changed) as GameConfig;
+  validateConfig(config);
+  return { config, changed };
+}
+
+function merge(target: unknown, patch: unknown, path: string, changed: string[]): unknown {
+  if (patch === undefined) return target;
+  if (Array.isArray(patch) || patch === null || typeof patch !== 'object' || typeof target !== 'object' || target === null || Array.isArray(target)) {
+    if (JSON.stringify(target) !== JSON.stringify(patch)) changed.push(path || '(root)');
+    return structuredClone(patch);
+  }
+  const out = target as Record<string, unknown>;
+  for (const [k, v] of Object.entries(patch as Record<string, unknown>)) {
+    out[k] = merge(out[k], v, path ? `${path}.${k}` : k, changed);
+  }
+  return out;
+}

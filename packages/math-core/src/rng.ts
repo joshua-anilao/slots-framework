@@ -1,0 +1,10 @@
+/**
+ * Random number source. Every random choice in the engine goes through this,
+ * so a seed replays a round exactly.
+ */
+export interface IRng {
+  /** Integer in [0, maxExclusive). */
+  nextInt(maxExclusive: number): number;
+  /** Float in [0, 1). */
+  nextFloat(): number;
+}
