@@ -10,6 +10,7 @@ import { SpeedController } from './controllers/speedController';
 import { SpinController } from './controllers/spinController';
 import { AutoSpinModel } from './models/autoSpinModel';
 import { BetModel } from './models/betModel';
+import { ConnectionModel } from './models/connectionModel';
 import { SpeedModel } from './models/speedModel';
 import { SpinModel } from './models/spinModel';
 import { WalletModel } from './models/walletModel';
@@ -53,6 +54,7 @@ export function createLocalGame(opts: LocalGameOptions) {
     bet: new BetModel(opts.config.bet.levels, opts.config.bet.defaultIndex),
     spin: new SpinModel(),
     autoSpin: new AutoSpinModel(),
+    connection: new ConnectionModel(),
     speed: new SpeedModel(),
   };
 

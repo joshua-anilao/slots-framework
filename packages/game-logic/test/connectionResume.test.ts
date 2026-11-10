@@ -71,7 +71,7 @@ describe('interrupted round resume', () => {
   it('refuses to resume while another round is playing', async () => {
     const g = game();
     const res = (await g.controllers.spin.spinOnce()) as SpinResponse;
-    g.models.spin.phase.set('presenting');
+    g.models.spin.machine.send('request');
     expect(await g.controllers.spin.resume(res)).toBeNull();
   });
 });

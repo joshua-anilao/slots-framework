@@ -18,10 +18,7 @@ Open the printed link. On your phone, use the "Network" link (phone and PC on th
 
 | Folder | What |
 |---|---|
-| `src/main.ts` | Boot: builds the game (`createLocalGame`) and the views |
-| `src/views/` | Reels, HUD, overlays, and `HtmlRoundPresenter` (plays a Spin Result) |
-| `src/windows/` | Popups (Change Bet, more in 2b/2c) |
-| `src/theme/` | `Theme` interface + placeholder theme (frame names from the art guide) |
-| `src/debug/` | Debug panel (session-only overrides) |
-| `src/core/pace.ts` | Pacing table from the design guide (normal / turbo / super turbo) |
-| `src/strings.ts` | All player-facing text |
+| `src/main.ts` | Boot: builds the game (`createLocalGame`) and the views (composition root) |
+| `src/framework/` | Reusable pieces, see `src/framework/README.md`. Never imports from `game/` |
+| `src/game/` | Game 001 only: placeholder theme (everything else was promoted to the framework) (see `src/game/README.md`) |
+| `src/styles.css` | All styles (framework and game rules still share one file) |

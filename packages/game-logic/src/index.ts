@@ -1,5 +1,7 @@
 export { Observable } from './core/observable';
 export type { ReadOnlyObservable } from './core/observable';
+export { StateMachine } from './core/stateMachine';
+export type { TransitionTable } from './core/stateMachine';
 export { EventBus } from './core/eventBus';
 export type { GameEvents, AutoSpinStopReason } from './core/eventBus';
 
@@ -7,6 +9,8 @@ export { WalletModel } from './models/walletModel';
 export { BetModel } from './models/betModel';
 export { SpinModel } from './models/spinModel';
 export type { SpinPhase } from './models/spinModel';
+export { ConnectionModel } from './models/connectionModel';
+export type { ConnectionState } from './models/connectionModel';
 export { AutoSpinModel, DEFAULT_AUTO_STOP } from './models/autoSpinModel';
 export type { AutoSpinStopConditions } from './models/autoSpinModel';
 export { SpeedModel } from './models/speedModel';

@@ -110,7 +110,8 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 .sym.back { background: repeating-linear-gradient(45deg, #b32020 0 10px, #8f1515 10px 20px); box-shadow: inset 0 0 0 5px #f5c542, inset 0 0 0 8px #fff3b0;
   color: #f5c542; }
 .sym.back .back-mark { font-size: 56px; text-shadow: 0 0 12px #f5c542; }
-.sym.win { animation: winSway 1s ease-in-out infinite; z-index: 2; box-shadow: 0 0 0 4px var(--win), 0 0 26px var(--win); }
+.reel.has-win { overflow: visible; }
+.sym.win { animation: winSway 1s ease-in-out infinite; z-index: 6; box-shadow: 0 0 0 4px var(--win), 0 0 26px var(--win); }
 /* Winning cards sway side to side: wide but slow (Josh, 2026-11-09). No scaling. */
 @keyframes winSway { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-7px) rotate(-2.5deg); }
   75% { transform: translateX(7px) rotate(2.5deg); } }

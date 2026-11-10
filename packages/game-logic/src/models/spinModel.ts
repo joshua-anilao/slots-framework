@@ -1,16 +1,26 @@
 import { Observable } from '../core/observable';
+import type { ReadOnlyObservable } from '../core/observable';
+import { StateMachine } from '../core/stateMachine';
 
 /** Where the spin flow is. */
 export type SpinPhase = 'idle' | 'requesting' | 'presenting';
+/** request: bet placed, asking the service. present: result arrived, playing it. fail: the request failed. done: playback finished. */
+export type SpinEvent = 'request' | 'present' | 'fail' | 'done';
 
 /** State of the current / last round, for the UI. */
 export class SpinModel {
-  readonly phase = new Observable<SpinPhase>('idle');
+  /** The spin flow: idle → requesting → presenting → idle. */
+  readonly machine = new StateMachine<SpinPhase, SpinEvent>('idle', {
+    idle: { request: 'requesting' },
+    requesting: { present: 'presenting', fail: 'idle' },
+    presenting: { done: 'idle' },
+  });
+  get phase(): ReadOnlyObservable<SpinPhase> { return this.machine.state; }
   readonly lastWin = new Observable<number>(0);
   readonly lastRoundId = new Observable<string>('');
   /** Multiplier shown on the multiplier bar (views update it during playback). */
   readonly multiplier = new Observable<number>(1);
   /** Free spins left during playback (views update it). */
   readonly freeSpinsLeft = new Observable<number>(0);
-  get isBusy(): boolean { return this.phase.value !== 'idle'; }
+  get isBusy(): boolean { return !this.machine.is('idle'); }
 }

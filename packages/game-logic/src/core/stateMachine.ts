@@ -1,0 +1,32 @@
+import { Observable } from './observable';
+import type { ReadOnlyObservable } from './observable';
+
+/** For every state, the events it accepts and the state each one leads to. */
+export type TransitionTable<S extends string, E extends string> = Record<S, Partial<Record<E, S>>>;
+
+/**
+ * A small finite state machine. Flows (spin round, auto spin, connection...) are written as a
+ * table of allowed moves instead of loose flags, so an impossible move is refused in one place.
+ */
+export class StateMachine<S extends string, E extends string> {
+  private readonly current: Observable<S>;
+
+  constructor(initial: S, private readonly table: TransitionTable<S, E>) {
+    this.current = new Observable<S>(initial);
+  }
+
+  /** The state, readable and watchable by views. */
+  get state(): ReadOnlyObservable<S> { return this.current; }
+
+  is(state: S): boolean { return this.current.value === state; }
+
+  can(event: E): boolean { return this.table[this.current.value][event] !== undefined; }
+
+  /** Moves on the event. Returns false (and changes nothing) if the current state does not accept it. */
+  send(event: E): boolean {
+    const next = this.table[this.current.value][event];
+    if (next === undefined) return false;
+    this.current.set(next);
+    return true;
+  }
+}

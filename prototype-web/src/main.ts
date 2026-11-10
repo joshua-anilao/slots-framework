@@ -1,26 +1,26 @@
 import { createLocalGame } from '@slots/game-logic';
-import { audio } from './core/audio';
+import { audio } from './framework/core/audio';
 import type { GameConfig } from '@slots/math-core';
 import gameJson from '../../games/game-001/game.json';
-import { el } from './core/dom';
-import { DebugPanel } from './debug/debugPanel';
-import { STRINGS } from './strings';
-import { PlaceholderTheme } from './theme/placeholderTheme';
-import type { Theme } from './theme/theme';
-import { FxLayer } from './views/fx';
-import { HtmlRoundPresenter } from './views/htmlRoundPresenter';
-import { HudView } from './views/hudView';
-import { Overlays } from './views/overlays';
-import { ReelsView } from './views/reelsView';
-import { WinnerNotice } from './views/winnerNotice';
-import { openAutoSpinWindow } from './windows/autoSpinWindow';
-import { openBetWindow } from './windows/betWindow';
-import { openBuyBonusWindow } from './windows/buyBonusWindow';
-import { openMenu } from './windows/menuWindows';
-import { buzz, loadSettings } from './core/settings';
+import { el } from './framework/core/dom';
+import { DebugPanel } from './framework/debug/debugPanel';
+import { STRINGS } from './framework/strings';
+import { PlaceholderTheme } from './game/theme/placeholderTheme';
+import type { Theme } from './framework/theme/theme';
+import { FxLayer } from './framework/views/fx';
+import { HtmlRoundPresenter } from './framework/cascade/htmlRoundPresenter';
+import { HudView } from './framework/views/hudView';
+import { Overlays } from './framework/views/overlays';
+import { ReelsView } from './framework/cascade/reelsView';
+import { WinnerNotice } from './framework/views/winnerNotice';
+import { openAutoSpinWindow } from './framework/windows/autoSpinWindow';
+import { openBetWindow } from './framework/windows/betWindow';
+import { openBuyBonusWindow } from './framework/windows/buyBonusWindow';
+import { openMenu } from './framework/windows/menuWindows';
+import { buzz, loadSettings } from './framework/core/settings';
 import type { SpinResponse } from '@slots/game-logic';
-import { LoadingScreen } from './windows/loadingScreen';
-import { Modal } from './windows/modal';
+import { LoadingScreen } from './framework/windows/loadingScreen';
+import { Modal } from './framework/windows/modal';
 import './styles.css';
 
 const config = gameJson as unknown as GameConfig;
@@ -128,11 +128,14 @@ const offlineBar = el('div.offline-bar', { text: STRINGS.offline });
 screen.append(offlineBar);
 let sentAt = 0;
 const setBars = (n: 0 | 1 | 2 | 3) => { wifi.className = `wifi bars-${n}`; };
-const setOffline = (off: boolean) => {
+// Offline strip follows the connection state machine (online ⇄ offline).
+models.connection.machine.state.subscribe(st => {
+  const off = st === 'offline';
   if (off === offlineBar.classList.contains('show')) return;
   offlineBar.classList.toggle('show', off);
   if (off) setBars(0); else overlays.toast(STRINGS.reconnected);
-};
+});
+const setOffline = (off: boolean) => { models.connection.machine.send(off ? 'lost' : 'restored'); };
 bus.on('spinStarted', () => { sentAt = performance.now(); });
 bus.on('spinResolved', () => {
   const rtt = performance.now() - sentAt;

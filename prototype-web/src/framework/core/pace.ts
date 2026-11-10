@@ -61,6 +61,11 @@ export class Pace {
 
   skip(): void {
     this.hurry = true;
+    this.cancelWaits();
+  }
+
+  /** Ends every pending wait now without changing the speed. */
+  cancelWaits(): void {
     for (const fn of [...this.pending]) fn();
   }
 

@@ -1,12 +1,12 @@
-import { DEFAULT_WIN_TIERS, winTierFor } from '@slots/game-logic';
+import { DEFAULT_WIN_TIERS, StateMachine, winTierFor } from '@slots/game-logic';
 import type { IRoundPresenter, SpeedMode, SpinResponse, WinTierThresholds } from '@slots/game-logic';
 import type { GameConfig, SpinOutcome } from '@slots/math-core';
 import { audio } from '../core/audio';
 import { Pace } from '../core/pace';
 import { money, STRINGS } from '../strings';
-import type { FxLayer } from './fx';
-import type { HudView } from './hudView';
-import type { Overlays } from './overlays';
+import type { FxLayer } from '../views/fx';
+import type { HudView } from '../views/hudView';
+import type { Overlays } from '../views/overlays';
 import { rowAfterDrop } from './reelsView';
 import type { ReelsView } from './reelsView';
 
@@ -18,7 +18,12 @@ import type { ReelsView } from './reelsView';
  */
 export class HtmlRoundPresenter implements IRoundPresenter {
   private pace = new Pace();
-  private phase: 'idle' | 'spinning' | 'resolving' = 'idle';
+  /** Playback of one round: idle → spinning (cards drop) → resolving (wins, cascades) → next spin or idle. */
+  private readonly phase = new StateMachine<'idle' | 'spinning' | 'resolving', 'start' | 'landed' | 'end'>('idle', {
+    idle: { start: 'spinning', end: 'idle' },
+    spinning: { landed: 'resolving', end: 'idle' },
+    resolving: { start: 'spinning', end: 'idle' },
+  });
   private multValue = 1;
   /** Player tapped the board: the current spin jumps to its final grid and win. */
   private snapRequested = false;
@@ -90,7 +95,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
       audio.play('bigWin');
       await this.overlays.bigWin(r.totalWin, r.bet, this.tiers, tier, this.pace, () => audio.play('coin'));
     }
-    this.phase = 'idle';
+    this.phase.send('end');
   }
 
   /**
@@ -99,7 +104,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
    */
   skip(): void {
     if (this.overlays.busy) { this.overlays.skip(); return; }
-    if (this.phase === 'idle') return;
+    if (this.phase.is('idle')) return;
     this.snapRequested = true;
     this.reels.slam();
     this.reels.finishAll();
@@ -128,13 +133,13 @@ export class HtmlRoundPresenter implements IRoundPresenter {
     const steps = spin.steps;
     if (!steps.length || !steps[0].grid) return shown + spin.spinWin;
     this.snapRequested = false;
-    this.phase = 'spinning';
+    this.phase.send('start');
     this.multValue = 0;
     this.setMultiplier(steps[0].multiplier);
     this.reels.showSpots(undefined);
     audio.play('spin');
     await this.reels.spin(steps[0].grid, this.pace);
-    this.phase = 'resolving';
+    this.phase.send('landed');
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];

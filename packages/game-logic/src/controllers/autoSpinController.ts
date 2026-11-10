@@ -14,11 +14,11 @@ export class AutoSpinController {
 
   /** Starts auto spin. count = Infinity for "until stopped". Resolves when it stops. */
   async start(count: number, conditions?: Partial<AutoSpinStopConditions>): Promise<AutoSpinStopReason> {
-    if (this.model.active.value || count <= 0) return 'player';
+    if (!this.model.machine.is('idle') || count <= 0) return 'player';
     this.model.conditions = { ...this.model.conditions, ...conditions };
     this.model.startBalance = this.wallet.balance.value;
     this.model.remaining.set(count);
-    this.model.active.set(true);
+    this.model.machine.send('start');
     let reason: AutoSpinStopReason = 'finished';
     let noFunds = false;
     const offFunds = this.bus.on('insufficientFunds', () => { noFunds = true; });
@@ -39,7 +39,7 @@ export class AutoSpinController {
     }
     offFunds();
     if (reason === 'finished' && this.model.remaining.value > 0) reason = 'player';
-    this.model.active.set(false);
+    this.model.machine.send('finish');
     this.model.remaining.set(0);
     this.bus.publish('autoSpinStopped', { reason });
     return reason;
@@ -47,6 +47,6 @@ export class AutoSpinController {
 
   /** Player pressed stop. The current spin finishes first. */
   stop(): void {
-    this.model.active.set(false);
+    this.model.machine.send('stop');
   }
 }

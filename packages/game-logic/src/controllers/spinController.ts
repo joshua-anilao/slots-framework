@@ -11,7 +11,7 @@ import type { ISpinService, SpinRequest, SpinResponse } from '../services/spinSe
 import type { ForceOptions } from '@slots/math-core';
 
 /**
- * The spin flow: idle → requesting → presenting → idle.
+ * The spin flow (state machine on SpinModel): idle → requesting → presenting → idle.
  * Takes the bet off the shown balance at once, asks the spin service,
  * lets the view play the result, then shows the final balance.
  */
@@ -46,7 +46,7 @@ export class SpinController {
 
   /** Player tapped during playback: skip to the end. */
   skip(): void {
-    if (this.spin.phase.value === 'presenting') this.presenter.skip();
+    if (this.spin.machine.is('presenting')) this.presenter.skip();
   }
 
   private async run(req: SpinRequest): Promise<SpinResponse | null> {
@@ -59,7 +59,7 @@ export class SpinController {
     }
     if (this.nextForce) { req.force = this.nextForce; this.nextForce = undefined; }
 
-    this.spin.phase.set('requesting');
+    this.spin.machine.send('request');
     this.spin.lastWin.set(0);
     this.wallet.balance.set(Math.round((shown - cost) * 100) / 100);
     this.bus.publish('spinStarted', { bet: req.bet, buyBonus: !!req.buyBonus });
@@ -69,7 +69,7 @@ export class SpinController {
       response = await this.service.spin(req);
     } catch (err) {
       this.wallet.balance.set(shown);
-      this.spin.phase.set('idle');
+      this.spin.machine.send('fail');
       if (err instanceof InsufficientFundsError) {
         this.bus.publish('insufficientFunds', { needed: err.needed, balance: err.balance });
       } else if (err instanceof ConnectionError) {
@@ -92,7 +92,7 @@ export class SpinController {
    */
   async resume(response: SpinResponse): Promise<SpinResponse | null> {
     if (this.spin.isBusy) return null;
-    this.spin.phase.set('requesting');
+    this.spin.machine.send('request');
     this.spin.lastWin.set(0);
     this.spin.lastRoundId.set(response.roundId);
     this.wallet.balance.set(Math.round((response.balanceBefore - response.result.cost) * 100) / 100);
@@ -102,7 +102,7 @@ export class SpinController {
 
   private async present(response: SpinResponse): Promise<SpinResponse> {
     const r = response.result;
-    this.spin.phase.set('presenting');
+    this.spin.machine.send('present');
     try {
       await this.presenter.present(response, this.speed.mode.value);
     } catch (err) {
@@ -114,7 +114,7 @@ export class SpinController {
       const tier = winTierFor(r.winX, this.tiers);
       if (tier !== 'none') this.bus.publish('winTier', { tier, winX: r.winX, amount: r.totalWin });
       this.bus.publish('roundPresented', { roundId: response.roundId, totalWin: r.totalWin });
-      this.spin.phase.set('idle');
+      this.spin.machine.send('done');
     }
     return response;
   }

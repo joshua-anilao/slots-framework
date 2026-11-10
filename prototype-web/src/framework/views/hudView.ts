@@ -264,7 +264,7 @@ export class HudView {
    * One turn takes IDLE_TURN_MS idle, or ACTIVE_TURN_MS[speed] while a round animates.
    */
   private static readonly IDLE_TURN_MS = 7143; // idle: 20% slower than 5714 (Josh, 2026-11-09)
-  private static readonly ACTIVE_TURN_MS: Record<SpeedMode, number> = { normal: 1213, turbo: 727, super: 364 }; // normal 20% faster than 1455
+  private static readonly ACTIVE_TURN_MS: Record<SpeedMode, number> = { normal: 809, turbo: 485, super: 243 }; // normal 50% faster than 1213; turbo and super keep the same ratios
   private iconActive = false;
   private rateRaf = 0;
 

@@ -1,7 +1,7 @@
 import type { Cell } from '@slots/math-core';
-import { el } from '../core/dom';
-import { frameName } from './theme';
-import type { Theme } from './theme';
+import { el } from '../../framework/core/dom';
+import { frameName } from '../../framework/theme/theme';
+import type { Theme } from '../../framework/theme/theme';
 
 interface Look { glyph: string; bg: string; fg: string; tier: 'high' | 'low' | 'wild' | 'scatter' }
 
