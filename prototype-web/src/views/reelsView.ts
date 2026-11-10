@@ -113,16 +113,23 @@ export class ReelsView {
   highlight(positions: Pos[]): void {
     const win = new Set(positions.map(p => `${p.reel}:${p.row}`));
     this.root.classList.add('dimmed');
-    this.cells.forEach((col, r) => col.forEach((n, row) => {
-      const on = win.has(`${r}:${row}`);
-      n.classList.toggle('win', on);
-      n.classList.toggle('dim', !on);
-    }));
+    this.cells.forEach((col, r) => {
+      let any = false;
+      col.forEach((n, row) => {
+        const on = win.has(`${r}:${row}`);
+        any ||= on;
+        n.classList.toggle('win', on);
+        n.classList.toggle('dim', !on);
+      });
+      // A column with winners stops clipping, so its cards can sway and glow over the neighbours.
+      this.cols[r].classList.toggle('has-win', any);
+    });
   }
 
   clearMarks(): void {
     this.root.classList.remove('dimmed');
     for (const col of this.cells) for (const n of col) n.classList.remove('win', 'dim');
+    for (const c of this.cols) c.classList.remove('has-win');
   }
 
   /** Winning gold cards flip over to their back; they become WILD after the drop. */
@@ -158,12 +165,13 @@ export class ReelsView {
   async pop(removed: Pos[], pace: Pace): Promise<void> {
     const d = pace.t.pop;
     for (const p of removed) this.cells[p.reel][p.row].classList.remove('win');
+    for (const c of this.cols) c.classList.remove('has-win'); // clip again before new cards fall in from above
     const anims = removed.map(p => this.cells[p.reel][p.row].animate(
       // Burst without any scaling (Josh: no squash and stretch): a hard shake, flash, then fade.
       [{ transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(1)' },
-        { transform: 'translate(-6px,1px) rotate(-3deg)', filter: 'brightness(1.8)', offset: 0.15 },
-        { transform: 'translate(6px,-1px) rotate(3deg)', filter: 'brightness(2.2)', offset: 0.3 },
-        { transform: 'translate(-4px,0) rotate(-2deg)', filter: 'brightness(2.6)', offset: 0.45 },
+        { transform: 'translate(-2px,0) rotate(-1deg)', filter: 'brightness(1.8)', offset: 0.15 },
+        { transform: 'translate(2px,0) rotate(1deg)', filter: 'brightness(2.2)', offset: 0.3 },
+        { transform: 'translate(-1px,0) rotate(-.5deg)', filter: 'brightness(2.6)', offset: 0.45 },
         { transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(3)', offset: 0.6 },
         { transform: 'translate(0,0) rotate(0)', opacity: 0, filter: 'brightness(3)' }],
       { duration: d, easing: 'ease-in', fill: 'forwards' }).finished);
