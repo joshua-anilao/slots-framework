@@ -17,9 +17,9 @@ export function openBetWindow(host: HTMLElement, game: LocalGame): void {
   };
   modal.body.append(
     el('div.bet-row', {}, [
-      el('button.round-btn', { text: '−', onclick: () => { pick = Math.max(0, pick - 1); render(); } }),
+      el('button.round-btn', { text: '−', onclick: () => { pick = pick <= 0 ? bet.levels.length - 1 : pick - 1; render(); } }),
       current,
-      el('button.round-btn', { text: '+', onclick: () => { pick = Math.min(bet.levels.length - 1, pick + 1); render(); } }),
+      el('button.round-btn', { text: '+', onclick: () => { pick = pick >= bet.levels.length - 1 ? 0 : pick + 1; render(); } }),
     ]),
     grid,
     el('button.primary', { text: STRINGS.confirm, onclick: () => { game.controllers.bet.select(pick); modal.close(); } }),

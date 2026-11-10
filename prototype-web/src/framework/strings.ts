@@ -119,7 +119,7 @@ export const STRINGS = {
     { title: 'FREE SPINS', text: '3 or more scatters win Free Spins with a bigger multiplier: x2, x4, x6, x10.' },
   ],
   debugActive: 'DEBUG OVERRIDES ACTIVE',
-  marquee: 'Welcome to the Game 001 prototype! Placeholder art. Demo balance only, no real money.',
+  marquee: 'Welcome to the Fishball Fiesta prototype! Placeholder art. Demo balance only, no real money.',
 } as const;
 
 const fmt = new Intl.NumberFormat('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

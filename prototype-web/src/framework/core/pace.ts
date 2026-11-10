@@ -30,10 +30,10 @@ export interface Timing {
 export const TIMINGS: Record<SpeedMode, Timing> = {
   normal: { clear: 200, cardFall: 300, cardStagger: 40, reelStagger: 90, firstStop: 600, stopGap: 150, anticipation: 600,
     highlight: 1000, pop: 400, drop: 300, wildReveal: 300, stepPause: 200, scatterCelebrate: 2000, banner: 2200, countUp: 4000 },
-  turbo: { clear: 120, cardFall: 180, cardStagger: 20, reelStagger: 45, firstStop: 300, stopGap: 75, anticipation: 0,
-    highlight: 550, pop: 250, drop: 200, wildReveal: 180, stepPause: 80, scatterCelebrate: 1200, banner: 1500, countUp: 2500 },
+  turbo: { clear: 120, cardFall: 180, cardStagger: 20, reelStagger: 45, firstStop: 300, stopGap: 75, anticipation: 250,
+    highlight: 450, pop: 200, drop: 200, wildReveal: 140, stepPause: 50, scatterCelebrate: 1000, banner: 1300, countUp: 2000 },
   super: { clear: 80, cardFall: 120, cardStagger: 10, reelStagger: 20, firstStop: 150, stopGap: 38, anticipation: 0,
-    highlight: 300, pop: 150, drop: 120, wildReveal: 100, stepPause: 30, scatterCelebrate: 700, banner: 1000, countUp: 1500 },
+    highlight: 300, pop: 110, drop: 100, wildReveal: 70, stepPause: 20, scatterCelebrate: 500, banner: 800, countUp: 1100 },
 };
 
 /** How the reels spin. "drop" = card cascade games; "scroll" = classic spinning strips. */

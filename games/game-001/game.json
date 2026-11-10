@@ -1,6 +1,6 @@
 {
   "id": "game-001",
-  "name": "Game 001 (working title)",
+  "name": "Fishball Fiesta",
   "version": "0.1.0",
   "grid": { "reels": 5, "rows": 4 },
   "minWaysCount": 3,
@@ -138,7 +138,7 @@
     "enabled": true,
     "priceX": 50
   },
-  "maxWinX": 5000,
+  "maxWinX": 2000,
   "maxCascades": 100,
   "targets": {
     "rtp": 0.965,

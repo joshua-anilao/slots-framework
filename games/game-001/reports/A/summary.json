@@ -6,18 +6,18 @@
   },
   "variant": "A",
   "seed": 20261109,
-  "rounds": 1000000,
-  "createdAt": "2026-11-09T14:33:11.571Z",
-  "rtp": 0.9772595590001032,
-  "rtpBase": 0.6208145922000662,
-  "rtpFreeSpins": 0.3564176071999998,
-  "rtpCi90": 0.01192253324674873,
-  "hitFrequency": 0.385718,
-  "freeSpinsOneIn": 137.38150844896276,
-  "volatilityIndex": 7.247740575531142,
-  "maxWinX": 820.383,
+  "rounds": 10000000,
+  "createdAt": "2026-11-10T16:23:25.083Z",
+  "rtp": 0.9650143359872305,
+  "rtpBase": 0.6209567225558003,
+  "rtpFreeSpins": 0.34403040598000095,
+  "rtpCi90": 0.0037135986633904513,
+  "hitFrequency": 0.385382,
+  "freeSpinsOneIn": 140.38437241166312,
+  "volatilityIndex": 7.1388632778545755,
+  "maxWinX": 999.8709999999999,
   "capHits": 0,
-  "buyBonusRtp": 0.950251174599994,
+  "buyBonusRtp": 0.9555773951000007,
   "session": {
     "sessions": 2000,
     "balance": 1000,
@@ -33,25 +33,25 @@
   "checks": [
     {
       "name": "RTP",
-      "value": "97.73%",
-      "target": "96.50% ± 1.19%",
-      "pass": false
+      "value": "96.50%",
+      "target": "96.50% ± 0.50%",
+      "pass": true
     },
     {
       "name": "Hit frequency",
-      "value": "38.57%",
+      "value": "38.54%",
       "target": "30.00% - 45.00%",
       "pass": true
     },
     {
       "name": "Free spins frequency",
-      "value": "1 in 137",
+      "value": "1 in 140",
       "target": "1 in 120 - 200",
       "pass": true
     },
     {
       "name": "Buy bonus RTP",
-      "value": "95.03%",
+      "value": "95.56%",
       "target": "96.50% ± 2.00%",
       "pass": true
     }

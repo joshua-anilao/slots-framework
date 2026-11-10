@@ -19,3 +19,4 @@
 | Date | Decision |
 |---|---|
 | 2026-11-09 | Draft math v0.1.0 tuned to ~96.5% RTP. Max win seen ~1,000x in 10M rounds, so the 5,000x cap is not reachable in practice. |
+| 2026-11-10 | Max-win cap set to 2,000x (was 5,000x). 10M rounds: RTP 96.50%, hit 38.54%, free spins 1 in 140, buy bonus RTP 95.56% at 50x. Buy price stays 50x. Theme direction: Pinoy street food (name pending). |

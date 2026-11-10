@@ -60,8 +60,8 @@ export function openAutoSpinWindow(host: HTMLElement, game: LocalGame, onStart: 
 
   const total = new OptionRow(STRINGS.totalSpins, true, {
     show: () => String(spins),
-    dec: () => { spins = Math.max(10, spins - 10); },
-    inc: () => { spins = Math.min(MAX_SPINS, spins + 10); },
+    dec: () => { spins = spins <= 10 ? MAX_SPINS : spins - 10; }, // loops from the lowest to the highest
+    inc: () => { spins = spins >= MAX_SPINS ? 10 : Math.min(MAX_SPINS, spins + 10); }, // loops from the highest to the lowest
   });
   const presets = el('div.presets');
   const renderPresets = () => presets.replaceChildren(...AUTO_PRESETS.map(n =>
@@ -71,8 +71,8 @@ export function openAutoSpinWindow(host: HTMLElement, game: LocalGame, onStart: 
 
   const win = new OptionRow(STRINGS.stopOnWinX, prev.singleWinAtLeast > 0, {
     show: () => `${winX}X`,
-    dec: () => { winX = WIN_X[Math.max(0, WIN_X.indexOf(winX) - 1)]; },
-    inc: () => { winX = WIN_X[Math.min(WIN_X.length - 1, WIN_X.indexOf(winX) + 1)]; },
+    dec: () => { winX = WIN_X[(WIN_X.indexOf(winX) + WIN_X.length - 1) % WIN_X.length]; },
+    inc: () => { winX = WIN_X[(WIN_X.indexOf(winX) + 1) % WIN_X.length]; },
   });
   const low = new OptionRow(STRINGS.stopBelow, prev.balanceBelow > 0, {
     show: () => money(below),

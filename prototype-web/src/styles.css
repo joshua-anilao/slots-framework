@@ -84,7 +84,13 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
   color: var(--fg); display: flex; flex-direction: column; align-items: center; justify-content: center;
   box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 0 3px 0 rgba(0,0,0,.4); transition: opacity .15s, filter .15s; }
 .sym .glyph { font-size: 64px; font-weight: 900; line-height: 1; }
-.sym.t-low .glyph { font-size: 70px; font-family: Georgia, serif; }
+.sym.t-low .glyph { font-size: 70px; }
+.sym .art { width: 108px; height: 108px; display: block; margin-top: -6px; filter: drop-shadow(0 3px 2px rgba(60,25,10,.35)); }
+.sym .art svg { width: 100%; height: 100%; display: block; }
+.sym.food { box-shadow: inset 0 -10px 0 var(--accent), inset 0 0 0 2px rgba(58,31,18,.55), 0 3px 0 rgba(0,0,0,.4); }
+.sym.food.t-low { box-shadow: inset 0 -6px 0 var(--accent), inset 0 0 0 2px rgba(58,31,18,.45), 0 3px 0 rgba(0,0,0,.4); }
+.sym.t-scatter .art, .sym.t-wild .art { width: 84px; height: 84px; margin-top: 4px; }
+.sym.t-scatter .glyph { margin-top: -4px; }
 .sym.t-wild .glyph { font-size: 34px; letter-spacing: 1px; }
 .sym.t-scatter .glyph { font-size: 25px; letter-spacing: 0; }
 .sym.t-scatter .sub { font-size: 20px; font-weight: 800; }
@@ -116,6 +122,8 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 @keyframes winSway { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-7px) rotate(-2.5deg); }
   75% { transform: translateX(7px) rotate(2.5deg); } }
 .sym.to-wild { animation: toWild .35s ease-out; }
+/* A new wild that is part of a win sways with the other winners (to-wild is declared later, so it needs its own rule). */
+.sym.win.to-wild { animation: winSway 1s ease-in-out infinite; }
 @keyframes toWild { 0% { transform: rotateY(90deg); filter: brightness(3); } 100% { transform: none; filter: none; } }
 .spots { position: absolute; inset: 0; pointer-events: none; }
 .spot { position: absolute; padding: 2px 8px; border-radius: 10px; background: #ff4f8b; color: #fff; font-weight: 900; font-size: 20px; }
@@ -134,7 +142,7 @@ body.fs .fs-title { display: flex; }
   background: radial-gradient(closest-side, rgba(255,240,170,.95), rgba(245,197,66,.55) 45%, rgba(245,197,66,0) 100%); mix-blend-mode: screen; }
 .win-box > .win-label, .win-box > .win-value { position: relative; z-index: 1; }
 .win-label { font-size: 22px; color: var(--muted); font-weight: 800; }
-.win-value { font-size: 40px; font-weight: 900; color: var(--win); font-variant-numeric: tabular-nums; }
+.win-value { font-size: 40px; font-weight: 900; color: var(--win); -webkit-text-stroke: 6px #1f0d00; paint-order: stroke fill; font-variant-numeric: tabular-nums; }
 .step-note { position: absolute; top: -34px; font-size: 26px; text-shadow: 0 2px 4px #000; color: var(--win); font-weight: 800; }
 
 /* Controls */
@@ -195,7 +203,7 @@ body.fs .fs-title { display: flex; }
 
 /* Effects layer: flying win amounts and particles */
 .fx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 15; }
-.fly-win { position: absolute; z-index: 3; font-size: 112px; font-weight: 900; color: var(--win); white-space: nowrap;
+.fly-win { position: absolute; z-index: 3; font-size: 112px; font-weight: 900; color: var(--win); white-space: nowrap; -webkit-text-stroke: 14px #1f0d00; paint-order: stroke fill;
   text-shadow: 0 4px 0 #6b4300, 0 0 24px rgba(245,197,66,.9), 0 0 2px #000; }
 .fly-win.big { font-size: 128px; color: #fff; text-shadow: 0 4px 0 #6b4300, 0 0 34px #f5c542, 0 0 60px #ff8a00; }
 .particle { position: absolute; border-radius: 50%; box-shadow: 0 0 10px currentColor, 0 0 6px #fff; }
@@ -232,7 +240,7 @@ body.fs .fs-title { display: flex; }
 .bigwin[data-tier="super"] .bw-title { color: #ff9ef0; text-shadow: 0 6px 0 #6b0050, 0 0 40px #ff4fd8; }
 .bigwin[data-tier="ultra"] .bw-title { color: #9ef6ff; text-shadow: 0 6px 0 #003a5b, 0 0 50px #29d3c0; animation: shake .25s infinite; }
 @keyframes shake { 25% { transform: translate(3px, -2px); } 75% { transform: translate(-3px, 2px); } }
-.bw-value { position: relative; font-size: 72px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; }
+.bw-value { position: relative; font-size: 72px; font-weight: 900; color: #fff; -webkit-text-stroke: 8px #2b1200; paint-order: stroke fill; font-variant-numeric: tabular-nums; }
 .coins { position: absolute; inset: 0; pointer-events: none; }
 .coin { position: absolute; top: -40px; width: 34px; height: 34px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #fff6c8, var(--gold) 50%, var(--gold2));
   animation: fall 1.4s linear infinite; }
@@ -276,14 +284,7 @@ body.fs .fs-title { display: flex; }
 /* --- Drop 2b: auto spin, buy bonus, loading screen --- */
 .buy-btn:disabled, .ctl:disabled { filter: grayscale(.7); opacity: .5; }
 .buy-btn[hidden] { display: none; }
-.spin-btn > .auto-count { inset: 0; margin: auto; width: 100%; height: 100%; display: grid; place-items: center; border-radius: 50%;
-  font-size: 56px; font-weight: 900; color: #fff; text-shadow: 0 3px 0 #6b4300, 0 0 12px rgba(0,0,0,.6); }
-.spin-btn > .auto-count:empty { display: none; }
-.spin-btn.auto > .spin-icon { opacity: .35; }
-.spin-btn.auto::after { content: "STOP"; position: absolute; bottom: 26px; left: 0; right: 0; text-align: center; font-size: 18px;
-  font-weight: 900; letter-spacing: 2px; color: #fff; }
 
-.auto-label { font-size: 20px; font-weight: 800; color: var(--muted); letter-spacing: 2px; margin: 6px 0 10px; text-align: center; }
 .auto-counts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 18px; }
 .auto-opt { height: 76px; border-radius: 16px; background: rgba(255,255,255,.08); font-size: 30px; font-weight: 900; }
 .auto-opt.on, .chip.on { background: var(--gold); color: #3b2300; box-shadow: 0 0 16px rgba(245,197,66,.5); }

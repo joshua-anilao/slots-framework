@@ -2,7 +2,7 @@ import { createLocalGame } from '@slots/game-logic';
 import { audio } from './framework/core/audio';
 import type { GameConfig } from '@slots/math-core';
 import gameJson from '../../games/game-001/game.json';
-import { el } from './framework/core/dom';
+import { el, fitText } from './framework/core/dom';
 import { DebugPanel } from './framework/debug/debugPanel';
 import { STRINGS } from './framework/strings';
 import { PlaceholderTheme } from './game/theme/placeholderTheme';
@@ -98,6 +98,9 @@ const winner = new WinnerNotice(game.services.winFeed,
   () => !document.body.classList.contains('fs') && models.spin.phase.value !== 'presenting' && !document.querySelector('.overlays .banner, .overlays .bigwin'), debug);
 const multWrap = el('div.mult-wrap', {}, [hud.mult.root, winner.root]);
 screen.append(hud.top, hud.header, multWrap, reelFrame, hud.win.root, hud.controls, hud.footer, fx.root, overlays.root);
+// A long game name shrinks to stay clear of the Buy Bonus button.
+const logoMain = hud.header.querySelector<HTMLElement>('.logo-main');
+if (logoMain) fitText(logoMain, 470);
 
 function spinOrSkip(): void {
   if (Modal.isOpen) return;

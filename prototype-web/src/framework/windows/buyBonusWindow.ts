@@ -45,9 +45,9 @@ export function openBuyBonusWindow(host: HTMLElement, game: LocalGame, onBuy: ()
     el('div.buy-art', {}, [el('span.buy-badge', { text: String(game.services.config.config.value.freeSpins.spins) }), el('span', { text: STRINGS.freeSpins })]),
     el('div.auto-label', { text: STRINGS.bet }),
     el('div.bet-row', {}, [
-      el('button.round-btn', { text: '−', onclick: () => { pick = Math.max(0, pick - 1); render(); } }),
+      el('button.round-btn', { text: '−', onclick: () => { pick = pick <= 0 ? bet.levels.length - 1 : pick - 1; render(); } }),
       betVal,
-      el('button.round-btn', { text: '+', onclick: () => { pick = Math.min(bet.levels.length - 1, pick + 1); render(); } }),
+      el('button.round-btn', { text: '+', onclick: () => { pick = pick >= bet.levels.length - 1 ? 0 : pick + 1; render(); } }),
     ]),
     el('div.auto-label', { text: STRINGS.price }), price, note, buyBtn,
   );

@@ -147,8 +147,6 @@ export class HudView {
   /** How long AUTO must be held to open the options (a fill shows the progress). */
   static readonly HOLD_MS = 500;
   readonly buyBtn: HTMLButtonElement;
-  /** Spins left while auto spin runs; the spin button turns into STOP. */
-  private autoCount = el('span.auto-count');
   private balance = el('span.bal-value');
   private roundId = el('span.round-id');
   readonly versionEl: HTMLElement;
@@ -165,7 +163,7 @@ export class HudView {
     ]);
     this.betBtn = el('button.ctl.bet-btn', { onclick: () => h.onBet() }) as HTMLButtonElement;
     this.spinBtn = el('button.spin-btn', { 'aria-label': STRINGS.spin, onclick: () => h.onSpin() },
-      [el('span.spin-ring'), el('span.spin-face'), el('span.spin-shine'), this.spinIcon, this.autoCount]) as HTMLButtonElement;
+      [el('span.spin-ring'), el('span.spin-face'), el('span.spin-shine'), this.spinIcon]) as HTMLButtonElement;
     this.turboBtn = el('button.ctl.turbo-btn', { onclick: () => h.onTurbo() }) as HTMLButtonElement;
     this.controls = el('div.controls', {}, [
       el('button.ctl', { onclick: () => h.onSettings() }, [el('span.ic', { text: '☰' }), el('span.lb', { text: 'MENU' })]),
@@ -212,14 +210,6 @@ export class HudView {
     };
     game.models.spin.phase.subscribe(lock);
     auto.active.subscribe(lock);
-    const showCount = () => {
-      const n = auto.remaining.value;
-      const was = this.autoCount.textContent;
-      this.autoCount.textContent = auto.active.value ? (n === Infinity ? '∞' : String(n)) : '';
-      if (was && was !== this.autoCount.textContent) this.autoCount.animate([{ transform: 'scale(1.3)' }, { transform: 'none' }], { duration: 220 });
-    };
-    auto.remaining.subscribe(showCount);
-    auto.active.subscribe(showCount);
     game.models.speed.mode.subscribe(m => this.showSpeed(m));
     this.mult.mode(false);
     this.startIcon();
