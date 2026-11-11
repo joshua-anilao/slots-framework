@@ -18,7 +18,8 @@
     "proto:build": "npm run build -w @slots/prototype-web",
     "sync:cocos": "tsx tools/syncCocos.ts",
     "check:cocos": "tsx tools/syncCocos.ts --check",
-    "build:cocos": "node tools/buildCocos.mjs"
+    "build:cocos": "node tools/buildCocos.mjs",
+    "report:assets": "tsx tools/assetReport.ts"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
