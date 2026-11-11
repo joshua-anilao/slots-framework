@@ -1,5 +1,5 @@
 /** Prints the size of each asset group so the boot download stays small. Usage: npm run report:assets */
-import { statSync } from 'node:fs';
+import { readdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ASSET_GROUPS } from '../client-cocos/assets/game/assetManifest';
@@ -11,3 +11,6 @@ for (const [group, specs] of Object.entries(ASSET_GROUPS)) {
   console.log(`${group}: ${kb.toFixed(0)} KB (${specs.length} atlas)`);
   if (group === 'boot' && kb > BOOT_BUDGET_KB) { console.error(`boot assets exceed ${BOOT_BUDGET_KB} KB`); process.exit(1); }
 }
+
+const audioKb = readdirSync(join(root, 'client-cocos/assets/resources/audio')).reduce((sum, f) => sum + statSync(join(root, 'client-cocos/assets/resources/audio', f)).size, 0) / 1024;
+console.log(`audio (lazy, loaded after boot): ${audioKb.toFixed(0)} KB`);

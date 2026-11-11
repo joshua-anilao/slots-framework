@@ -5,7 +5,7 @@
 export type Sfx = 'click' | 'spin' | 'reelStop' | 'scatter' | 'win' | 'pop' | 'multUp' | 'toWild' | 'fly' | 'bigWin' | 'coin' | 'fsIntro' | 'anticipation' | 'retrigger';
 
 export class SoundFx {
-  private ctx: AudioContext | null = null;
+  private ctx: BaseAudioContext | null = null;
   private master: GainNode | null = null;
   private noiseBuf: AudioBuffer | null = null;
   private _muted: boolean;
@@ -23,21 +23,27 @@ export class SoundFx {
     if (this.master) this.master.gain.value = m ? 0 : 0.5;
   }
 
+  /** Uses a given context instead of creating one. The sound exporter passes an OfflineAudioContext to render files. */
+  useContext(ctx: BaseAudioContext): void {
+    this.ctx = ctx;
+    this.master = ctx.createGain();
+    this.master.gain.value = this._muted ? 0 : 0.5;
+    this.master.connect(ctx.destination);
+    const len = ctx.sampleRate * 0.5;
+    this.noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = this.noiseBuf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+
   /** Browsers only allow sound after a tap: call on the first pointerdown. */
   unlock(): void {
     if (!this.ctx) {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (!Ctx) return;
-      this.ctx = new Ctx();
-      this.master = this.ctx.createGain();
-      this.master.gain.value = this._muted ? 0 : 0.5;
-      this.master.connect(this.ctx.destination);
-      const len = this.ctx.sampleRate * 0.5;
-      this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
-      const d = this.noiseBuf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.useContext(new Ctx());
     }
-    if (this.ctx.state === 'suspended') void this.ctx.resume();
+    const ctx = this.ctx as AudioContext | null;
+    if (ctx && ctx.state === 'suspended') void ctx.resume();
   }
 
   /** level: scatter number, multiplier step or win size, used for pitch. */
