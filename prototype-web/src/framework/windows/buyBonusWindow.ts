@@ -1,4 +1,5 @@
 import type { LocalGame } from '@slots/game-logic';
+import { buyPriceX } from '@slots/math-core';
 import { el } from '../core/dom';
 import { money, STRINGS } from '../strings';
 import { Modal } from './modal';
@@ -19,7 +20,7 @@ export function openBuyBonusWindow(host: HTMLElement, game: LocalGame, onBuy: ()
   const step1 = el('div.buy-step');
   const step2 = el('div.buy-step.confirm');
   const confirmText = el('div.confirm-text');
-  const priceX = game.services.config.config.value.buyBonus.priceX;
+  const priceX = buyPriceX(game.services.config.config.value);
 
   const render = () => {
     const b = bet.levels[pick];

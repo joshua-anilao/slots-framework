@@ -1,13 +1,13 @@
 {
   "game": {
     "id": "game-001",
-    "name": "Game 001 (working title)",
+    "name": "Fishball Fiesta",
     "version": "0.1.0"
   },
   "variant": "A",
   "seed": 20261109,
   "rounds": 10000000,
-  "createdAt": "2026-11-10T16:23:25.083Z",
+  "createdAt": "2026-11-10T19:09:49.803Z",
   "rtp": 0.9650143359872305,
   "rtpBase": 0.6209567225558003,
   "rtpFreeSpins": 0.34403040598000095,
@@ -17,17 +17,17 @@
   "volatilityIndex": 7.1388632778545755,
   "maxWinX": 999.8709999999999,
   "capHits": 0,
-  "buyBonusRtp": 0.9555773951000007,
+  "buyBonusRtp": 0.9538117022667104,
   "session": {
-    "sessions": 2000,
+    "sessions": 3000,
     "balance": 1000,
     "bet": 10,
     "maxSpins": 500,
-    "avgSpins": 380.8775,
-    "medianSpins": 477,
-    "bustRate": 0.509,
-    "profitRate": 0.322,
-    "avgEndBalance": 955.7449850000007,
+    "avgSpins": 378.53333333333336,
+    "medianSpins": 466,
+    "bustRate": 0.518,
+    "profitRate": 0.31866666666666665,
+    "avgEndBalance": 926.8966666666656,
     "bestEndBalance": 11276.220000000005
   },
   "checks": [
@@ -51,7 +51,7 @@
     },
     {
       "name": "Buy bonus RTP",
-      "value": "95.56%",
+      "value": "95.38%",
       "target": "96.50% ± 2.00%",
       "pass": true
     }

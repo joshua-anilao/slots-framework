@@ -1,5 +1,5 @@
-PAR SHEET,Game 001 (working title),version 0.1.0
-Generated,2026-11-10T16:23:25.083Z,Seed,20261109,Rounds,10000000,Variant,A
+PAR SHEET,Fishball Fiesta,version 0.1.0
+Generated,2026-11-10T19:09:49.803Z,Seed,20261109,Rounds,10000000,Variant,A
 
 SUMMARY
 RTP total,0.965014
@@ -14,8 +14,8 @@ Average cascades per spin,0.644803
 Max win seen (x bet),999.871000
 Max win cap (x bet),2000,Cap hits,0
 Buy bonus price (x bet),50
-Buy bonus RTP,0.955577
-Buy bonus average win (x bet),47.778870
+Buy bonus RTP,0.953812
+Buy bonus average win (x bet),47.690585
 
 WIN DISTRIBUTION,Rounds,Probability,RTP contribution
 0x,6146180,0.614618,0
@@ -120,10 +120,10 @@ free reel 3,L4,L4,H4,L3,L3,H2,H3,L1,L1,L3,L3,H1,L3,L3,H3,L2,L2,H3,L4,L4,H3,L2,L2
 free reel 4,H2,L2,L2,L3,L3,H4,H1,H4,H1,H2,H1,H4,L1,L1,H3,H1,H2,L3,L3,L4,L4,H1,L2,L2,H2,H3,L2,L2,H4,L4,L4,H3,L4,L4,L1,L1,L3,L3,L4,L4,H2,H4,SC,H2,H1,H3,H2,L3,L3,L2,L2,H3,H4,H3,H4,H3,L1,L1,H4,L1,L1
 free reel 5,H4,H3,H1,L2,L2,L1,L1,H3,L1,L1,H3,H4,H1,L4,L4,SC,H2,H3,L3,L3,H3,H2,H4,H2,H1,H2,H4,H3,H2,L1,L1,H2,H4,L4,L4,H4,L3,L3,L1,L1,H4,L3,L3,L2,L2,H1,L3,L3,H1,L2,L2,H4,L4,L4,H2,H1,L2,L2,L4,L4,H3
 
-SESSION SIMULATION,"2000 sessions, balance 1000, bet 10, up to 500 spins"
-Average spins played,380.877500
-Median spins played,477
-Went broke,0.509000
-Ended in profit,0.322000
-Average end balance,955.744985
+SESSION SIMULATION,"3000 sessions, balance 1000, bet 10, up to 500 spins"
+Average spins played,378.533333
+Median spins played,466
+Went broke,0.518000
+Ended in profit,0.318667
+Average end balance,926.896667
 Best end balance,11276.220000

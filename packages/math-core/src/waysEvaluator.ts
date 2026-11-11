@@ -1,6 +1,9 @@
 import type { GameConfig, SymbolConfig } from './config';
 import type { Grid, Pos, WaysWin } from './result';
 
+/** Pay scale of the active multiplier variant (1 when not set). */
+export const payScale = (config: GameConfig): number => config.multiplier.payScale?.[config.multiplier.variant] ?? 1;
+
 /**
  * Finds every ways win on a grid: a symbol (or wild) on adjacent reels from the left,
  * at least `minWaysCount` reels long. Ways = product of matches per reel.
@@ -35,7 +38,7 @@ export class WaysEvaluator {
         count++;
       }
       if (count < this.config.minWaysCount) continue;
-      const payPerWay = sym.pays?.[String(count)] ?? 0;
+      const payPerWay = (sym.pays?.[String(count)] ?? 0) * payScale(this.config);
       if (payPerWay <= 0) continue;
       // Positions on reels beyond the matched run were never added (loop breaks first).
       wins.push({ symbol: sym.id, count, ways, payPerWay, baseWin: payPerWay * ways * bet, positions });

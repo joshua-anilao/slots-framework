@@ -272,6 +272,7 @@ body.fs .fs-title { display: flex; }
 .dbg-row input, .dbg-row select { width: 130px; font-size: 20px; padding: 6px; background: #1d1430; color: #fff; border: 1px solid #554; border-radius: 6px; }
 .dbg-panel button { background: #2a1d44; border: 1px solid #554; border-radius: 8px; padding: 8px 12px; font-size: 18px; margin: 4px 4px 4px 0; }
 .dbg-btns { display: flex; flex-wrap: wrap; }
+.dbg-note { margin: 4px 0 10px; padding: 8px 10px; background: #1d1430; border-left: 3px solid #ff4f8b; border-radius: 6px; font-size: 16px; line-height: 1.35; color: #cdbfe6; }
 .dbg-stats { background: #1d1430; padding: 10px; border-radius: 8px; font-size: 18px; margin: 0 0 8px; }
 .dbg-msg { margin-top: 10px; color: #8ff0b4; font-size: 17px; word-break: break-word; }
 .dbg-msg.bad { color: #ff8fa3; }

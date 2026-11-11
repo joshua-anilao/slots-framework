@@ -1,3 +1,4 @@
+import { buyPriceX, payScale } from '@slots/math-core';
 import type { SimReport } from './simulate';
 import { BUCKETS, WIN_TIERS } from './simulate';
 import { checkTargets, pct } from './checks';
@@ -30,7 +31,7 @@ export function buildHtmlReport(r: SimReport): string {
   const tiers = WIN_TIERS.map((t, i) => `<tr><td>${t.label}</td><td class="num">${m.tiers[i] ? '1 in ' + n(m.rounds / m.tiers[i]) : 'never'}</td></tr>`).join('');
   const checkRows = checks.map(x => `<tr><td>${x.name}</td><td class="num">${x.value}</td><td class="num">${x.target}</td><td><span class="chip ${x.pass ? 'ok' : 'bad'}">${x.pass ? 'Pass' : 'Off target'}</span></td></tr>`).join('');
 
-  const pays = c.symbols.filter(s => s.pays).map(s => `<tr><td>${s.id}</td><td>${esc(s.name)}</td>${['3', '4', '5'].map(k => `<td class="num">${(s.pays![k] ?? 0).toFixed(3)}</td>`).join('')}</tr>`).join('');
+  const pays = c.symbols.filter(s => s.pays).map(s => `<tr><td>${s.id}</td><td>${esc(s.name)}</td>${['3', '4', '5'].map(k => `<td class="num">${((s.pays![k] ?? 0) * payScale(c)).toFixed(3)}</td>`).join('')}</tr>`).join('');
 
   const contrib = new Map<string, { base: number; free: number }>();
   for (const [k, [, win]] of m.symbolPays) {
@@ -43,7 +44,7 @@ export function buildHtmlReport(r: SimReport): string {
     .map(([s, e]) => `<tr><td>${s}</td><td class="num">${pct(e.base)}</td><td class="num">${pct(e.free)}</td><td class="num">${pct(e.base + e.free)}</td></tr>`).join('');
 
   const buy = r.buy ? `<section><h2>Buy bonus</h2><table><tbody>
-    <tr><td>Price</td><td class="num">${n(c.buyBonus.priceX)}x bet</td></tr>
+    <tr><td>Price</td><td class="num">${n(buyPriceX(c))}x bet</td></tr>
     <tr><td>RTP</td><td class="num">${pct(r.buy.rtp)} ± ${pct(r.buy.ci90)}</td></tr>
     <tr><td>Average win</td><td class="num">${n(r.buy.win / r.buy.rounds / bet, 1)}x bet</td></tr>
     <tr><td>Best win</td><td class="num">${n(r.buy.maxWinX)}x bet</td></tr>

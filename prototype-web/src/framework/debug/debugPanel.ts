@@ -1,4 +1,5 @@
 import type { LocalGame } from '@slots/game-logic';
+import { buyPriceX, payScale } from '@slots/math-core';
 import type { ConfigOverrides, GameConfig } from '@slots/math-core';
 import { el } from '../core/dom';
 import { money, STRINGS } from '../strings';
@@ -51,7 +52,9 @@ export class DebugPanel {
     const variant = el('select', {}, ['A', 'B', 'C', 'D'].map(v => el('option', { value: v, text: `${v}${v === base.multiplier.variant ? ' (game)' : ''}` }))) as HTMLSelectElement;
     variant.value = cur().multiplier.variant;
     variant.addEventListener('change', () => this.apply({ multiplier: { variant: variant.value as 'A' } }));
-    cfgSvc.config.subscribe(c => { variant.value = c.multiplier.variant; });
+    // Plain-language description of the selected variant, using the live numbers from the config.
+    const variantNote = el('div.dbg-note');
+    cfgSvc.config.subscribe(c => { variant.value = c.multiplier.variant; variantNote.textContent = describeVariant(c); });
 
     const spinStyle = el('select', {}, [el('option', { value: 'drop', text: 'Card drop (game)' }), el('option', { value: 'scroll', text: 'Scrolling reels' })]) as HTMLSelectElement;
     spinStyle.value = this.view.spinStyle;
@@ -69,10 +72,11 @@ export class DebugPanel {
       el('div.dbg-head', {}, [el('b', { text: 'Debug (this session only)' }), el('button', { text: '✕', onclick: () => this.toggle() })]),
       el('div.dbg-sec', { text: 'Math overrides' }),
       el('label.dbg-row', {}, [el('span', { text: 'Multiplier variant' }), variant]),
+      variantNote,
       num('Golden chance (base)', () => cur().golden.chanceBase, v => ({ golden: { chanceBase: v } })),
       num('Golden chance (free)', () => cur().golden.chanceFree, v => ({ golden: { chanceFree: v } })),
       num('Free spins awarded', () => cur().freeSpins.spins, v => ({ freeSpins: { spins: v } }), '1'),
-      num('Buy price (x bet)', () => cur().buyBonus.priceX, v => ({ buyBonus: { priceX: v } })),
+      num('Buy price (x bet)', () => buyPriceX(cur()), v => ({ buyBonus: { priceXByVariant: { [cur().multiplier.variant]: v } } })),
       num('Max win (x bet)', () => cur().maxWinX, v => ({ maxWinX: v }), '1'),
       el('div.dbg-btns', {}, [
         el('button', { text: 'Reset to game.json', onclick: () => { cfgSvc.clearOverrides(); this.say('Overrides cleared'); } }),
@@ -140,4 +144,22 @@ function mergeDeep<T>(a: T, b: unknown): T {
   const out = (typeof a === 'object' && a !== null ? a : {}) as Record<string, unknown>;
   for (const [k, v] of Object.entries(b)) out[k] = mergeDeep(out[k], v);
   return out as T;
+}
+
+/** What each multiplier variant does, written for a producer, with the live numbers from the config. */
+function describeVariant(c: GameConfig): string {
+  const m = c.multiplier;
+  const ladder = (l: number[]) => l.map(x => `x${x}`).join(' ');
+  const scale = payScale(c);
+  const money = `Pay scale x${scale}, buy price ${buyPriceX(c)}x bet.`;
+  switch (m.variant) {
+    case 'A':
+      return `A. Fixed ladder. Every cascade in a spin goes one step up: base ${ladder(m.A.base)}, free spins ${ladder(m.A.free)}. The last step repeats. It resets at the start of every spin. ${money}`;
+    case 'B':
+      return `B. Endless. Base starts at x${m.B.base.start} and adds +${m.B.base.step} per cascade; free spins start at x${m.B.free.start} and add +${m.B.free.step}. No upper limit. It resets every spin. ${money}`;
+    case 'C':
+      return `C. Like A, but in free spins the ladder does not reset between spins, it keeps climbing through the whole feature (base ${ladder(m.C.base)}, free ${ladder(m.C.free)}). Base spins reset as in A. ${money}`;
+    case 'D':
+      return `D. Multiplier spots. A card that takes part in a win marks its cell. Each later win on a marked cell doubles it (x2, x4, x8 up to x${m.D.cap}). A win's multiplier is the sum of the spots under its cards, at least x1. Spots reset every base spin and ${m.D.persistInFree === false ? 'every free spin' : 'last through the whole free spins feature'}. ${money}`;
+  }
 }

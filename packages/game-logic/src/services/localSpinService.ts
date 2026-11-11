@@ -1,4 +1,4 @@
-import { round2, SeededRng, SlotEngine } from '@slots/math-core';
+import { buyPriceX, round2, SeededRng, SlotEngine } from '@slots/math-core';
 import type { GameConfig, IRng } from '@slots/math-core';
 import type { IConfigService } from './configService';
 import type { LocalHistoryService } from './historyService';
@@ -59,7 +59,7 @@ export class LocalSpinService implements ISpinService {
       this.engine = new SlotEngine(config, this.rng);
     }
     if (!config.bet.levels.includes(req.bet)) throw new Error(`Bet ${req.bet} is not one of the allowed bet levels`);
-    const cost = req.buyBonus ? round2(config.buyBonus.priceX * req.bet) : req.bet;
+    const cost = req.buyBonus ? round2(buyPriceX(config) * req.bet) : req.bet;
     const before = this.wallet.peek();
     if (before < cost) throw new InsufficientFundsError(cost, before);
 

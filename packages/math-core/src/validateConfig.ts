@@ -37,9 +37,15 @@ export function validateConfig(c: GameConfig): void {
   for (const v of ['A', 'C'] as const) {
     if (!m[v].base.length || !m[v].free.length) p.push(`multiplier.${v} ladders must not be empty`);
   }
+  for (const [v, x] of Object.entries(m.payScale ?? {})) {
+    if (!(typeof x === 'number' && x > 0)) p.push(`multiplier.payScale.${v} must be a positive number`);
+  }
   if (c.bet.levels.length === 0) p.push('bet.levels is empty');
   if (c.bet.defaultIndex < 0 || c.bet.defaultIndex >= c.bet.levels.length) p.push('bet.defaultIndex is out of range');
   if (!(c.maxWinX > 0)) p.push('maxWinX must be positive');
   if (c.buyBonus.enabled && !(c.buyBonus.priceX > 0)) p.push('buyBonus.priceX must be positive');
+  for (const [v, x] of Object.entries(c.buyBonus.priceXByVariant ?? {})) {
+    if (!(typeof x === 'number' && x > 0)) p.push(`buyBonus.priceXByVariant.${v} must be a positive number`);
+  }
   if (p.length) throw new ConfigError(p);
 }

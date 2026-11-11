@@ -78,7 +78,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
         if (spin.freeSpinsAwarded > 0) {
           total += spin.freeSpinsAwarded;
           this.hud.setFreeSpins(total - i - 1, total);
-          audio.play('fsIntro');
+          audio.play('retrigger');
           await this.overlays.banner(STRINGS.retrigger(spin.freeSpinsAwarded), '', this.pace.t.banner * 0.7, this.pace, 'retrigger');
         }
       }
@@ -92,7 +92,7 @@ export class HtmlRoundPresenter implements IRoundPresenter {
     if (r.maxWinReached) this.overlays.toast(STRINGS.maxWin, 2500);
     const tier = winTierFor(r.winX, this.tiers);
     if (tier !== 'none' && !r.freeSpins) {
-      audio.play('bigWin');
+      audio.play('bigWin', ['big', 'super', 'ultra'].indexOf(tier));
       await this.overlays.bigWin(r.totalWin, r.bet, this.tiers, tier, this.pace, () => audio.play('coin'));
     }
     this.phase.send('end');

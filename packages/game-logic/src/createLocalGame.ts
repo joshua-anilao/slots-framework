@@ -1,4 +1,4 @@
-import { SeededRng } from '@slots/math-core';
+import { buyPriceX, SeededRng } from '@slots/math-core';
 import type { GameConfig } from '@slots/math-core';
 import { EventBus } from './core/eventBus';
 import { AutoSpinController } from './controllers/autoSpinController';
@@ -59,7 +59,7 @@ export function createLocalGame(opts: LocalGameOptions) {
   };
 
   const presenter = opts.presenter ?? new InstantPresenter();
-  const priceX = () => configService.config.value.buyBonus.priceX;
+  const priceX = () => buyPriceX(configService.config.value);
   const spin = new SpinController(spinService, presenter, models.wallet, models.bet, models.spin, models.speed,
     bus, opts.winTiers ?? DEFAULT_WIN_TIERS, priceX);
   const controllers = {

@@ -1,3 +1,4 @@
+import { buyPriceX, payScale } from '@slots/math-core';
 import type { SimReport } from './simulate';
 import { BUCKETS, WIN_TIERS } from './simulate';
 
@@ -5,6 +6,7 @@ import { BUCKETS, WIN_TIERS } from './simulate';
 export function buildParSheet(r: SimReport): string {
   const c = r.config;
   const m = r.main;
+  const scale = payScale(c);
   const rows: (string | number)[][] = [];
   const add = (...cells: (string | number)[]) => rows.push(cells);
 
@@ -24,7 +26,7 @@ export function buildParSheet(r: SimReport): string {
   add('Max win seen (x bet)', m.maxWinX);
   add('Max win cap (x bet)', c.maxWinX, 'Cap hits', m.capHits);
   if (r.buy) {
-    add('Buy bonus price (x bet)', c.buyBonus.priceX);
+    add('Buy bonus price (x bet)', buyPriceX(c));
     add('Buy bonus RTP', r.buy.rtp);
     add('Buy bonus average win (x bet)', r.buy.win / r.buy.rounds / betOf(r));
   }
@@ -36,7 +38,7 @@ export function buildParSheet(r: SimReport): string {
   WIN_TIERS.forEach((t, i) => add(t.label, m.tiers[i], m.tiers[i] ? m.rounds / m.tiers[i] : 0));
   add();
   add('PAYTABLE (x bet per way)', '3', '4', '5');
-  for (const s of c.symbols) if (s.pays) add(`${s.id} ${s.name}`, s.pays['3'] ?? 0, s.pays['4'] ?? 0, s.pays['5'] ?? 0);
+  for (const s of c.symbols) if (s.pays) add(`${s.id} ${s.name}`, (s.pays['3'] ?? 0) * scale, (s.pays['4'] ?? 0) * scale, (s.pays['5'] ?? 0) * scale);
   add();
   add('SYMBOL RTP CONTRIBUTION', 'Count', 'Mode', 'Hits', 'Hit rate per round', 'RTP contribution');
   const keys = [...m.symbolPays.keys()].sort();

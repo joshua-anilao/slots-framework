@@ -1,4 +1,5 @@
 import type { HistoryEntry, LocalGame, SpeedMode } from '@slots/game-logic';
+import { buyPriceX, payScale } from '@slots/math-core';
 import type { Cell, GameConfig, RoundResult, SpinOutcome } from '@slots/math-core';
 import { audio } from '../core/audio';
 import { el } from '../core/dom';
@@ -66,6 +67,7 @@ export function openSettings(d: MenuDeps): void {
 export function openRules(d: MenuDeps): void {
   const cfg: GameConfig = d.game.services.config.config.value;
   const bet = d.game.models.bet.bet;
+  const scale = payScale(cfg); // the live variant's pay scale
   const modal = new Modal(d.host, STRINGS.rules).open();
   modal.root.classList.add('tall');
   const pays = el('div.pay-grid');
@@ -74,7 +76,7 @@ export function openRules(d: MenuDeps): void {
     pays.append(el('div.pay-card', {}, [
       mini({ s: sym.id, g: false }, d.theme),
       el('div.pay-lines', {}, Object.keys(p).sort((a, b) => Number(b) - Number(a)).map(k =>
-        el('div', {}, [el('b', { text: `${k}× ` }), el('span', { text: money(Math.round(p[k] * bet * 100) / 100) })]))),
+        el('div', {}, [el('b', { text: `${k}× ` }), el('span', { text: money(Math.round(p[k] * scale * bet * 100) / 100) })]))),
     ]));
   }
   // Multiplier text follows whichever variant is live (debug can switch it).
@@ -96,7 +98,7 @@ export function openRules(d: MenuDeps): void {
     section(STRINGS.rulesGoldTitle, STRINGS.rulesGold(goldReels)),
     section(STRINGS.rulesMultTitle, STRINGS.rulesMult(ladder('base'), ladder('free'))),
     section(STRINGS.freeSpins, STRINGS.rulesFs(fs.retrigger, fs.maxTotalSpins)),
-    ...(cfg.buyBonus.enabled ? [section(STRINGS.buyTitle, STRINGS.rulesBuy(cfg.buyBonus.priceX))] : []),
+    ...(cfg.buyBonus.enabled ? [section(STRINGS.buyTitle, STRINGS.rulesBuy(buyPriceX(cfg)))] : []),
     section(STRINGS.rulesMoreTitle,
       STRINGS.rulesRtp((cfg.targets.rtp * 100).toFixed(2)),
       STRINGS.rulesMaxWin(cfg.maxWinX.toLocaleString('en-PH')),

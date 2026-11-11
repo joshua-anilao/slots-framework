@@ -1,0 +1,60 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fishball Fiesta sim report (D)</title>
+<style>
+:root{--bg:#f5f3ef;--surface:#fff;--fg:#1e1b17;--muted:#6b645b;--line:#e3ddd3;--accent:#a8740a;--ok:#1f8a4c;--ok-soft:#e1f3e8;--bad:#b42318;--bad-soft:#fde7e4;--bar:#c9973a}
+@media (prefers-color-scheme:dark){:root{--bg:#141210;--surface:#1d1a16;--fg:#ece6dc;--muted:#a1988b;--line:#322c24;--accent:#e0b44a;--ok:#4cc27f;--ok-soft:#173225;--bad:#f2867b;--bad-soft:#3a1814;--bar:#c9973a;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:28px 16px 48px;display:grid;gap:20px}
+h1{margin:0;font-size:24px}h2{margin:0 0 10px;font-size:16px}
+.meta,.note{color:var(--muted);font-size:13px}
+.verdict{font-weight:600}.verdict.ok{color:var(--ok)}.verdict.bad{color:var(--bad)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:2px}
+.tile small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}.tile b{font-size:22px;font-variant-numeric:tabular-nums}.tile span{color:var(--muted);font-size:12px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{font-size:12px;color:var(--muted);font-weight:500}
+.num{text-align:right}.bar{width:40%}.bar span{display:block;height:10px;background:var(--bar);border-radius:4px}
+.chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+</style></head><body><div class="wrap">
+<header><div class="meta">Simulation report · variant D · 10,000,000 rounds · seed 20261109 · 11/10/2026, 7:12:27 PM · 107.4 s</div>
+<h1>Fishball Fiesta <span class="meta">v0.1.0</span></h1>
+<p class="verdict ok">All targets met.</p></header>
+<div class="tiles"><div class="tile"><small>RTP</small><b>96.81%</b><span>± 0.80% (90% confidence)</span></div><div class="tile"><small>Hit frequency</small><b>38.54%</b><span>rounds that win anything</span></div><div class="tile"><small>Free spins</small><b>1 in 140</b><span>avg win 58.3x bet</span></div><div class="tile"><small>Volatility index</small><b>15.31</b><span>high</span></div><div class="tile"><small>Max win seen</small><b>2,000x</b><span>cap 2,000x · hit 77 times</span></div></div>
+<section><h2>Target check</h2><table><thead><tr><th>Measure</th><th class="num">Simulated</th><th class="num">Target</th><th></th></tr></thead><tbody><tr><td>RTP</td><td class="num">96.81%</td><td class="num">96.50% ± 0.80%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Hit frequency</td><td class="num">38.54%</td><td class="num">30.00% - 45.00%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Free spins frequency</td><td class="num">1 in 140</td><td class="num">1 in 120 - 200</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Buy bonus RTP</td><td class="num">97.00%</td><td class="num">96.50% ± 2.00%</td><td><span class="chip ok">Pass</span></td></tr></tbody></table>
+<p class="note">RTP tolerance is the larger of the game's tolerance and the simulation's own 90% confidence range. Narrowing it needs more rounds.</p></section>
+<div class="grid2">
+<section><h2>Where the RTP comes from</h2><table><tbody>
+<tr><td>Base game</td><td class="num">55.26%</td></tr>
+<tr><td>Free spins</td><td class="num">41.55%</td></tr>
+<tr><td><b>Total</b></td><td class="num"><b>96.81%</b></td></tr>
+<tr><td>Average cascades per spin</td><td class="num">0.64</td></tr>
+<tr><td>Free spins retriggers</td><td class="num">4,369</td></tr></tbody></table></section>
+<section><h2>Win celebrations</h2><table><tbody><tr><td>Big Win (10x+)</td><td class="num">1 in 88</td></tr><tr><td>Super Win (25x+)</td><td class="num">1 in 191</td></tr><tr><td>Ultra Win (50x+)</td><td class="num">1 in 372</td></tr></tbody></table></section>
+</div>
+<section><h2>Win distribution</h2><table><thead><tr><th>Round win</th><th class="num">Chance</th><th></th><th class="num">RTP share</th></tr></thead><tbody><tr><td>0x</td><td class="num">61.46%</td><td class="bar"><span style="width:100.0%"></span></td><td class="num">0.00%</td></tr><tr><td>>0x - <1x</td><td class="num">28.92%</td><td class="bar"><span style="width:47.0%"></span></td><td class="num">7.21%</td></tr><tr><td>1x - <5x</td><td class="num">7.41%</td><td class="bar"><span style="width:12.1%"></span></td><td class="num">16.52%</td></tr><tr><td>5x - <20x</td><td class="num">1.58%</td><td class="bar"><span style="width:2.6%"></span></td><td class="num">14.48%</td></tr><tr><td>20x - <100x</td><td class="num">0.51%</td><td class="bar"><span style="width:0.8%"></span></td><td class="num">21.16%</td></tr><tr><td>100x - <1,000x</td><td class="num">0.12%</td><td class="bar"><span style="width:0.5%"></span></td><td class="num">30.35%</td></tr><tr><td>1,000x+</td><td class="num">0.00%</td><td class="bar"><span style="width:0.5%"></span></td><td class="num">7.09%</td></tr></tbody></table></section>
+<div class="grid2"><section><h2>Buy bonus</h2><table><tbody>
+    <tr><td>Price</td><td class="num">60x bet</td></tr>
+    <tr><td>RTP</td><td class="num">97.00% ± 0.83%</td></tr>
+    <tr><td>Average win</td><td class="num">58.2x bet</td></tr>
+    <tr><td>Best win</td><td class="num">2,000x bet</td></tr>
+    <tr><td>Rounds simulated</td><td class="num">300,000</td></tr></tbody></table></section><section><h2>Player sessions</h2><p class="note">3,000 players each start with ₱1,000 and bet ₱10 until broke or 500 spins.</p><table><tbody>
+    <tr><td>Average spins played</td><td class="num">294</td></tr>
+    <tr><td>Median spins played</td><td class="num">234</td></tr>
+    <tr><td>Went broke</td><td class="num">73.03%</td></tr>
+    <tr><td>Ended in profit</td><td class="num">19.57%</td></tr>
+    <tr><td>Average end balance</td><td class="num">₱1,042.17</td></tr>
+    <tr><td>Best end balance</td><td class="num">₱30,379.42</td></tr></tbody></table></section></div>
+<div class="grid2">
+<section><h2>Paytable (x bet per way)</h2><table><thead><tr><th>Id</th><th>Name</th><th class="num">3</th><th class="num">4</th><th class="num">5</th></tr></thead><tbody><tr><td>H1</td><td>High 1</td><td class="num">0.120</td><td class="num">0.360</td><td class="num">1.200</td></tr><tr><td>H2</td><td>High 2</td><td class="num">0.096</td><td class="num">0.240</td><td class="num">0.720</td></tr><tr><td>H3</td><td>High 3</td><td class="num">0.072</td><td class="num">0.192</td><td class="num">0.480</td></tr><tr><td>H4</td><td>High 4</td><td class="num">0.048</td><td class="num">0.144</td><td class="num">0.360</td></tr><tr><td>L1</td><td>Low 1</td><td class="num">0.024</td><td class="num">0.072</td><td class="num">0.192</td></tr><tr><td>L2</td><td>Low 2</td><td class="num">0.024</td><td class="num">0.060</td><td class="num">0.144</td></tr><tr><td>L3</td><td>Low 3</td><td class="num">0.012</td><td class="num">0.048</td><td class="num">0.120</td></tr><tr><td>L4</td><td>Low 4</td><td class="num">0.012</td><td class="num">0.036</td><td class="num">0.096</td></tr></tbody></table></section>
+<section><h2>RTP by symbol</h2><table><thead><tr><th>Symbol</th><th class="num">Base</th><th class="num">Free</th><th class="num">Total</th></tr></thead><tbody><tr><td>L1</td><td class="num">14.60%</td><td class="num">4.11%</td><td class="num">18.71%</td></tr><tr><td>L3</td><td class="num">12.83%</td><td class="num">2.58%</td><td class="num">15.41%</td></tr><tr><td>L2</td><td class="num">9.42%</td><td class="num">3.77%</td><td class="num">13.19%</td></tr><tr><td>L4</td><td class="num">10.33%</td><td class="num">2.23%</td><td class="num">12.57%</td></tr><tr><td>H1</td><td class="num">1.00%</td><td class="num">11.30%</td><td class="num">12.30%</td></tr><tr><td>H2</td><td class="num">2.65%</td><td class="num">8.40%</td><td class="num">11.04%</td></tr><tr><td>H3</td><td class="num">2.25%</td><td class="num">5.35%</td><td class="num">7.60%</td></tr><tr><td>H4</td><td class="num">2.17%</td><td class="num">4.32%</td><td class="num">6.49%</td></tr></tbody></table></section>
+</div>
+<section><h2>Settings used</h2><table><tbody>
+<tr><td>Grid</td><td>5 x 4, ways (min 3)</td></tr>
+<tr><td>Multiplier</td><td>Variant D</td></tr>
+<tr><td>Golden symbols</td><td>reels 2, 3, 4 · base 8.00% · free 30.00%</td></tr>
+<tr><td>Free spins</td><td>3+ scatters = 10 spins, +2 per extra · retrigger on</td></tr>
+<tr><td>Bet used</td><td>₱10</td></tr></tbody></table>
+<p class="note">Full numbers, reel strips and symbol hit rates are in par-sheet.csv next to this file.</p></section>
+</div></body></html>

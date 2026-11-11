@@ -3,6 +3,7 @@ import type { FreeSpinsOutcome, RoundResult, SpinOutcome } from './result';
 import type { IRng } from './rng';
 import type { IMultiplierStrategy } from './multiplierStrategy';
 import { createMultiplier } from './multipliers';
+import { buyPriceX } from './pricing';
 import { round2, SpinRunner } from './spinRunner';
 import { validateConfig } from './validateConfig';
 
@@ -73,7 +74,7 @@ export class SlotEngine {
     const baseWin = base ? base.spinWin : 0;
     return {
       bet: req.bet,
-      cost: buy ? round2(c.buyBonus.priceX * req.bet) : req.bet,
+      cost: buy ? round2(buyPriceX(c) * req.bet) : req.bet,
       buyBonus: buy,
       base,
       freeSpins,

@@ -63,7 +63,10 @@ export interface MultiplierConfig {
   A: LadderConfig;
   B: EndlessConfig;
   C: LadderConfig;
-  D: { cap: number };
+  /** cap = highest spot value. persistInFree (default true) = spots last for the whole free spins feature; false = they reset every free spin. */
+  D: { cap: number; persistInFree?: boolean };
+  /** Pay scale per variant (default 1). Every symbol pay is multiplied by the value for the active variant, so each variant can be tuned to the RTP target. */
+  payScale?: Partial<Record<MultiplierVariant, number>>;
 }
 
 export interface FreeSpinsConfig {
@@ -86,6 +89,8 @@ export interface BuyBonusConfig {
   enabled: boolean;
   /** Price as a multiple of the bet. */
   priceX: number;
+  /** Price per multiplier variant (x bet), so each variant's buy bonus lands near the RTP target. Falls back to priceX. */
+  priceXByVariant?: Partial<Record<MultiplierVariant, number>>;
 }
 
 export interface BetConfig {

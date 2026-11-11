@@ -1,0 +1,8 @@
+{
+  "$schema": "./.creator/asset-template/package.json",
+  "_version": "1.0.0",
+  "name": "client-cocos",
+  "uuid": "6f1c3a52-8d4e-4b7a-9c20-5e1f0a7b2d11",
+  "type": "2d",
+  "creator": { "version": "3.8.8" }
+}

@@ -2,7 +2,7 @@
  * Placeholder sound effects, synthesised with Web Audio (no files to load, so boot stays fast).
  * A real theme replaces these with recorded sounds using the same names (design guide section 5).
  */
-export type Sfx = 'click' | 'spin' | 'reelStop' | 'scatter' | 'win' | 'pop' | 'multUp' | 'toWild' | 'fly' | 'bigWin' | 'coin' | 'fsIntro' | 'anticipation';
+export type Sfx = 'click' | 'spin' | 'reelStop' | 'scatter' | 'win' | 'pop' | 'multUp' | 'toWild' | 'fly' | 'bigWin' | 'coin' | 'fsIntro' | 'anticipation' | 'retrigger';
 
 export class SoundFx {
   private ctx: AudioContext | null = null;
@@ -56,7 +56,14 @@ export class SoundFx {
       case 'toWild': [1047, 1319, 1568, 2093].forEach((f, i) => this.tone(f, t + i * 0.04, 0.15, 'sine', 0.2)); break;
       case 'fly': this.noise(t, 0.25, 2000, 6000, 0.12); this.tone(700, t, 0.25, 'sine', 0.1, 1400); break;
       case 'coin': this.tone(2200 + Math.random() * 600, t, 0.07, 'square', 0.06); break;
-      case 'bigWin': [262, 330, 392, 523].forEach((f, i) => { this.tone(f, t + i * 0.12, 0.9, 'sawtooth', 0.12); this.tone(f * 2, t + i * 0.12, 0.9, 'triangle', 0.15); }); break;
+      case 'bigWin': {
+        // level 0 = big, 1 = super, 2 = ultra: each tier adds higher notes, more length and a rising sweep.
+        const notes = [262, 330, 392, 523, ...(level >= 1 ? [659, 784] : []), ...(level >= 2 ? [1047, 1319] : [])];
+        notes.forEach((f, i) => { this.tone(f, t + i * 0.12, 0.9 + level * 0.3, 'sawtooth', 0.12); this.tone(f * 2, t + i * 0.12, 0.9 + level * 0.3, 'triangle', 0.15); });
+        if (level >= 1) this.noise(t, 0.8 + level * 0.4, 400, 6000, 0.14);
+        break;
+      }
+      case 'retrigger': [523, 659, 784, 1047, 1319].forEach((f, i) => this.tone(f, t + i * 0.07, 0.5, 'triangle', 0.25)); this.noise(t, 0.5, 600, 7000, 0.12); break;
       case 'fsIntro': [392, 494, 587, 784].forEach((f, i) => this.tone(f, t + i * 0.09, 0.6, 'triangle', 0.25)); this.noise(t, 0.6, 300, 5000, 0.12); break;
       case 'anticipation': this.tone(220, t, 0.8, 'sawtooth', 0.08, 440); break;
     }

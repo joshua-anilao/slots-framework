@@ -1,0 +1,59 @@
+{
+  "game": {
+    "id": "game-001",
+    "name": "Fishball Fiesta",
+    "version": "0.1.0"
+  },
+  "variant": "D",
+  "seed": 20261109,
+  "rounds": 10000000,
+  "createdAt": "2026-11-10T19:12:27.346Z",
+  "rtp": 0.9680533187897779,
+  "rtpBase": 0.5526021465397005,
+  "rtpFreeSpins": 0.4154517580087004,
+  "rtpCi90": 0.007964374768975702,
+  "hitFrequency": 0.385376,
+  "freeSpinsOneIn": 140.38831407673626,
+  "volatilityIndex": 15.310373500997303,
+  "maxWinX": 2000,
+  "capHits": 77,
+  "buyBonusRtp": 0.9699538325555336,
+  "session": {
+    "sessions": 3000,
+    "balance": 1000,
+    "bet": 10,
+    "maxSpins": 500,
+    "avgSpins": 294.40866666666665,
+    "medianSpins": 234,
+    "bustRate": 0.7303333333333333,
+    "profitRate": 0.19566666666666666,
+    "avgEndBalance": 1042.1656199999986,
+    "bestEndBalance": 30379.42000000001
+  },
+  "checks": [
+    {
+      "name": "RTP",
+      "value": "96.81%",
+      "target": "96.50% ± 0.80%",
+      "pass": true
+    },
+    {
+      "name": "Hit frequency",
+      "value": "38.54%",
+      "target": "30.00% - 45.00%",
+      "pass": true
+    },
+    {
+      "name": "Free spins frequency",
+      "value": "1 in 140",
+      "target": "1 in 120 - 200",
+      "pass": true
+    },
+    {
+      "name": "Buy bonus RTP",
+      "value": "97.00%",
+      "target": "96.50% ± 2.00%",
+      "pass": true
+    }
+  ]
+}

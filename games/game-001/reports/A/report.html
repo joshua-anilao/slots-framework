@@ -1,5 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Game 001 (working title) sim report (A)</title>
+<title>Fishball Fiesta sim report (A)</title>
 <style>
 :root{--bg:#f5f3ef;--surface:#fff;--fg:#1e1b17;--muted:#6b645b;--line:#e3ddd3;--accent:#a8740a;--ok:#1f8a4c;--ok-soft:#e1f3e8;--bad:#b42318;--bad-soft:#fde7e4;--bar:#c9973a}
 @media (prefers-color-scheme:dark){:root{--bg:#141210;--surface:#1d1a16;--fg:#ece6dc;--muted:#a1988b;--line:#322c24;--accent:#e0b44a;--ok:#4cc27f;--ok-soft:#173225;--bad:#f2867b;--bad-soft:#3a1814;--bar:#c9973a;color-scheme:dark}}
@@ -18,11 +18,11 @@ td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-
 .chip{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.bad{background:var(--bad-soft);color:var(--bad)}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
 </style></head><body><div class="wrap">
-<header><div class="meta">Simulation report · variant A · 10,000,000 rounds · seed 20261109 · 11/10/2026, 4:23:25 PM · 105.7 s</div>
-<h1>Game 001 (working title) <span class="meta">v0.1.0</span></h1>
+<header><div class="meta">Simulation report · variant A · 10,000,000 rounds · seed 20261109 · 11/10/2026, 7:09:49 PM · 79.2 s</div>
+<h1>Fishball Fiesta <span class="meta">v0.1.0</span></h1>
 <p class="verdict ok">All targets met.</p></header>
 <div class="tiles"><div class="tile"><small>RTP</small><b>96.50%</b><span>± 0.37% (90% confidence)</span></div><div class="tile"><small>Hit frequency</small><b>38.54%</b><span>rounds that win anything</span></div><div class="tile"><small>Free spins</small><b>1 in 140</b><span>avg win 48.3x bet</span></div><div class="tile"><small>Volatility index</small><b>7.14</b><span>medium-high</span></div><div class="tile"><small>Max win seen</small><b>1,000x</b><span>cap 2,000x · hit 0 times</span></div></div>
-<section><h2>Target check</h2><table><thead><tr><th>Measure</th><th class="num">Simulated</th><th class="num">Target</th><th></th></tr></thead><tbody><tr><td>RTP</td><td class="num">96.50%</td><td class="num">96.50% ± 0.50%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Hit frequency</td><td class="num">38.54%</td><td class="num">30.00% - 45.00%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Free spins frequency</td><td class="num">1 in 140</td><td class="num">1 in 120 - 200</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Buy bonus RTP</td><td class="num">95.56%</td><td class="num">96.50% ± 2.00%</td><td><span class="chip ok">Pass</span></td></tr></tbody></table>
+<section><h2>Target check</h2><table><thead><tr><th>Measure</th><th class="num">Simulated</th><th class="num">Target</th><th></th></tr></thead><tbody><tr><td>RTP</td><td class="num">96.50%</td><td class="num">96.50% ± 0.50%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Hit frequency</td><td class="num">38.54%</td><td class="num">30.00% - 45.00%</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Free spins frequency</td><td class="num">1 in 140</td><td class="num">1 in 120 - 200</td><td><span class="chip ok">Pass</span></td></tr><tr><td>Buy bonus RTP</td><td class="num">95.38%</td><td class="num">96.50% ± 2.00%</td><td><span class="chip ok">Pass</span></td></tr></tbody></table>
 <p class="note">RTP tolerance is the larger of the game's tolerance and the simulation's own 90% confidence range. Narrowing it needs more rounds.</p></section>
 <div class="grid2">
 <section><h2>Where the RTP comes from</h2><table><tbody>
@@ -36,15 +36,15 @@ td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-
 <section><h2>Win distribution</h2><table><thead><tr><th>Round win</th><th class="num">Chance</th><th></th><th class="num">RTP share</th></tr></thead><tbody><tr><td>0x</td><td class="num">61.46%</td><td class="bar"><span style="width:100.0%"></span></td><td class="num">0.00%</td></tr><tr><td>>0x - <1x</td><td class="num">26.23%</td><td class="bar"><span style="width:42.7%"></span></td><td class="num">7.03%</td></tr><tr><td>1x - <5x</td><td class="num">8.74%</td><td class="bar"><span style="width:14.2%"></span></td><td class="num">20.55%</td></tr><tr><td>5x - <20x</td><td class="num">2.83%</td><td class="bar"><span style="width:4.6%"></span></td><td class="num">26.06%</td></tr><tr><td>20x - <100x</td><td class="num">0.64%</td><td class="bar"><span style="width:1.0%"></span></td><td class="num">25.45%</td></tr><tr><td>100x - <1,000x</td><td class="num">0.10%</td><td class="bar"><span style="width:0.5%"></span></td><td class="num">17.40%</td></tr><tr><td>1,000x+</td><td class="num">0.00%</td><td class="bar"><span style="width:0.5%"></span></td><td class="num">0.00%</td></tr></tbody></table></section>
 <div class="grid2"><section><h2>Buy bonus</h2><table><tbody>
     <tr><td>Price</td><td class="num">50x bet</td></tr>
-    <tr><td>RTP</td><td class="num">95.56% ± 0.20%</td></tr>
-    <tr><td>Average win</td><td class="num">47.8x bet</td></tr>
+    <tr><td>RTP</td><td class="num">95.38% ± 0.37%</td></tr>
+    <tr><td>Average win</td><td class="num">47.7x bet</td></tr>
     <tr><td>Best win</td><td class="num">1,818x bet</td></tr>
-    <tr><td>Rounds simulated</td><td class="num">1,000,000</td></tr></tbody></table></section><section><h2>Player sessions</h2><p class="note">2,000 players each start with ₱1,000 and bet ₱10 until broke or 500 spins.</p><table><tbody>
-    <tr><td>Average spins played</td><td class="num">381</td></tr>
-    <tr><td>Median spins played</td><td class="num">477</td></tr>
-    <tr><td>Went broke</td><td class="num">50.90%</td></tr>
-    <tr><td>Ended in profit</td><td class="num">32.20%</td></tr>
-    <tr><td>Average end balance</td><td class="num">₱955.74</td></tr>
+    <tr><td>Rounds simulated</td><td class="num">300,000</td></tr></tbody></table></section><section><h2>Player sessions</h2><p class="note">3,000 players each start with ₱1,000 and bet ₱10 until broke or 500 spins.</p><table><tbody>
+    <tr><td>Average spins played</td><td class="num">379</td></tr>
+    <tr><td>Median spins played</td><td class="num">466</td></tr>
+    <tr><td>Went broke</td><td class="num">51.80%</td></tr>
+    <tr><td>Ended in profit</td><td class="num">31.87%</td></tr>
+    <tr><td>Average end balance</td><td class="num">₱926.90</td></tr>
     <tr><td>Best end balance</td><td class="num">₱11,276.22</td></tr></tbody></table></section></div>
 <div class="grid2">
 <section><h2>Paytable (x bet per way)</h2><table><thead><tr><th>Id</th><th>Name</th><th class="num">3</th><th class="num">4</th><th class="num">5</th></tr></thead><tbody><tr><td>H1</td><td>High 1</td><td class="num">0.144</td><td class="num">0.434</td><td class="num">1.446</td></tr><tr><td>H2</td><td>High 2</td><td class="num">0.116</td><td class="num">0.290</td><td class="num">0.868</td></tr><tr><td>H3</td><td>High 3</td><td class="num">0.087</td><td class="num">0.232</td><td class="num">0.578</td></tr><tr><td>H4</td><td>High 4</td><td class="num">0.058</td><td class="num">0.173</td><td class="num">0.434</td></tr><tr><td>L1</td><td>Low 1</td><td class="num">0.029</td><td class="num">0.087</td><td class="num">0.232</td></tr><tr><td>L2</td><td>Low 2</td><td class="num">0.029</td><td class="num">0.073</td><td class="num">0.173</td></tr><tr><td>L3</td><td>Low 3</td><td class="num">0.015</td><td class="num">0.058</td><td class="num">0.144</td></tr><tr><td>L4</td><td>Low 4</td><td class="num">0.015</td><td class="num">0.044</td><td class="num">0.116</td></tr></tbody></table></section>

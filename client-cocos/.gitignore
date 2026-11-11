@@ -1,0 +1,10 @@
+# Cocos Creator generated folders (rebuilt by the editor)
+library/
+temp/
+local/
+build/
+native/
+.idea/
+.vscode/
+*.log
+.creator/

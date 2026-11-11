@@ -45,18 +45,18 @@ export class EndlessMultiplier implements IMultiplierStrategy {
  * Variant D: multiplier spots. A cell that is part of a win is marked;
  * each later win on a marked cell doubles it (x2, x4, x8 ... up to cap).
  * A step's multiplier is the sum of active spots (x2+) under its wins, at least x1.
- * Spots reset every base spin and last for the whole free spins feature.
+ * Spots reset every base spin and last for the whole free spins feature (or reset every free spin when persistInFree is false).
  */
 export class SpotsMultiplier implements IMultiplierStrategy {
   private grid: number[][];
   private isFree = false;
-  constructor(private readonly reels: number, private readonly rows: number, private readonly cap: number) {
+  constructor(private readonly reels: number, private readonly rows: number, private readonly cap: number, private readonly persistInFree = true) {
     this.grid = this.empty();
   }
   startFeature(): void { this.grid = this.empty(); }
   startSpin(isFree: boolean): void {
     this.isFree = isFree;
-    if (!isFree) this.grid = this.empty();
+    if (!isFree || !this.persistInFree) this.grid = this.empty();
   }
   multiplierFor(winPositions: Pos[]): number {
     let sum = 0;
@@ -86,7 +86,7 @@ export function createMultiplier(config: GameConfig): IMultiplierStrategy {
     case 'A': return new LadderMultiplier(m.A.base, m.A.free);
     case 'B': return new EndlessMultiplier(m.B);
     case 'C': return new PersistentLadderMultiplier(m.C.base, m.C.free);
-    case 'D': return new SpotsMultiplier(config.grid.reels, config.grid.rows, m.D.cap);
+    case 'D': return new SpotsMultiplier(config.grid.reels, config.grid.rows, m.D.cap, m.D.persistInFree ?? true);
     default: throw new Error(`Unknown multiplier variant: ${String(m.variant)}`);
   }
 }
