@@ -35,6 +35,6 @@ export class EventBus {
   publish<K extends keyof GameEvents>(type: K, event: GameEvents[K]): void {
     const set = this.handlers.get(type);
     if (!set) return;
-    for (const fn of [...set]) (fn as (e: GameEvents[K]) => void)(event);
+    for (const fn of Array.from(set)) (fn as (e: GameEvents[K]) => void)(event);
   }
 }

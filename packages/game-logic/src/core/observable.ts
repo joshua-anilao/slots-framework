@@ -15,7 +15,7 @@ export class Observable<T> implements ReadOnlyObservable<T> {
   set(next: T): void {
     if (Object.is(next, this.current)) return;
     this.current = next;
-    for (const fn of [...this.listeners]) fn(next);
+    for (const fn of Array.from(this.listeners)) fn(next);
   }
 
   subscribe(fn: (value: T) => void): () => void {

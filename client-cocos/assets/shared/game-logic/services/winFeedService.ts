@@ -65,6 +65,6 @@ export class SimulatedWinFeedService implements IWinFeedService {
   }
 
   private emit(item: WinFeedItem): void {
-    for (const fn of [...this.listeners]) fn(item);
+    for (const fn of Array.from(this.listeners)) fn(item);
   }
 }

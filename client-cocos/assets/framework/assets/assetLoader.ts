@@ -53,11 +53,11 @@ export class AssetLoader<F> {
 
   /** The frame by name, from any loaded atlas. Throws with the frame name if it is not there. */
   frame(name: string): F {
-    for (const atlas of this.atlases.values()) {
+    for (const atlas of Array.from(this.atlases.values())) {
       const f = atlas.frame(name);
       if (f !== undefined) return f;
     }
-    const loaded = [...this.atlases.keys()].join(', ') || 'none';
+    const loaded = Array.from(this.atlases.keys()).join(', ') || 'none';
     throw new AssetError(`Missing frame "${name}" (loaded atlases: ${loaded}). Is its group loaded?`);
   }
 
