@@ -8,7 +8,9 @@ import { computeLayout } from '../framework/board/boardLayout';
 import { CocosRoundPresenter } from '../framework/board/cocosRoundPresenter';
 import type { IRoundHud } from '../framework/board/cocosRoundPresenter';
 import { SymbolView } from '../framework/board/symbolView';
+import { DebugPanel } from '../framework/debug/debugPanel';
 import { createCocosGame } from '../framework/bootstrap/createCocosGame';
+import { DebugController } from '../shared/game-logic/index';
 import { ScreenManager } from '../framework/screens/screenManager';
 import type { IScreenHost } from '../framework/screens/screenManager';
 import { hex, makeButton, makeLabel, uiNode } from '../framework/ui/uiKit';
@@ -112,8 +114,10 @@ export class GameBootstrap extends Component {
     screens.go('loaded');
 
     if (debug) {
+      const debugController = new DebugController(game);
+      new DebugPanel(root, debugController);
       (globalThis as unknown as { __ff: unknown }).__ff = {
-        game, board, screens, audio,
+        game, board, screens, audio, debug: debugController,
         snapshot: () => board.snapshot(),
         lastRound: undefined as unknown,
       };

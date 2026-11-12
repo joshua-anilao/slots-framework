@@ -23,6 +23,8 @@ export { SpinController } from './controllers/spinController';
 export { AutoSpinController } from './controllers/autoSpinController';
 export { BetController } from './controllers/betController';
 export { SpeedController } from './controllers/speedController';
+export { DebugController, DEBUG_FIELDS, VARIANTS } from './controllers/debugController';
+export type { DebugField, DebugFieldSpec, DebugStats, DebugMessage, MultiplierVariant } from './controllers/debugController';
 export { BuyBonusController } from './controllers/buyBonusController';
 export { InstantPresenter } from './controllers/roundPresenter';
 export type { IRoundPresenter } from './controllers/roundPresenter';
