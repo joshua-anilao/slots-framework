@@ -1,0 +1,7 @@
+# Run history and live state: local to this PC, never committed
+runs/
+queue/
+precommit/
+sessions.json
+attention.json
+active-run

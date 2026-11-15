@@ -1,29 +1,104 @@
 {
-  "$comment": "Side-by-side alternatives. Written by the pipeline tool (P variant add/update) once it exists; until then edit by hand only with Josh's OK. Results are 10M-round sims from games/game-001/brief.md (2026-11-10).",
-  "variants": [
-    {
-      "id": "multiplier-ladder",
-      "feature": 6,
-      "game": "game-001",
-      "switch": "game.json multiplier.variant, or debug panel",
-      "chosen": "A",
-      "options": [
-        { "key": "A", "name": "Fixed ladder", "status": "Keep", "payScale": 1, "buyPriceX": 50, "rtp": 0.9650, "buyRtp": 0.954, "report": "games/game-001/reports/A/" },
-        { "key": "B", "name": "Endless +1", "status": "Trying", "payScale": 1, "buyPriceX": 51.5, "rtp": 0.9682, "buyRtp": 0.965, "report": "games/game-001/reports/B/" },
-        { "key": "C", "name": "Ladder persists in free spins", "status": "Trying", "payScale": 1.01, "buyPriceX": 48.2, "rtp": 0.9634, "buyRtp": 0.966, "report": "games/game-001/reports/C/" },
-        { "key": "D", "name": "Multiplier spots", "status": "Trying", "payScale": 0.83, "buyPriceX": 60, "rtp": 0.9681, "buyRtp": 0.970, "report": "games/game-001/reports/D/" }
-      ]
-    },
-    {
-      "id": "spin-style",
-      "feature": 21,
-      "game": "game-001",
-      "switch": "debug panel Spin style",
-      "chosen": "drop",
-      "options": [
-        { "key": "drop", "name": "Card drop", "status": "Keep" },
-        { "key": "scroll", "name": "Scrolling reels", "status": "Trying" }
-      ]
+  "$comment": "Side-by-side alternatives, written by `node .pipeline/tools/pipeline.mjs variant add|update`. Format: games > slots > variants (v1, v2...). Extra fields (key, rtp, buyPriceX, report) are slots notes the tool keeps. RTPs are 10M-round sims from games/game-001/brief.md (2026-11-10).",
+  "updated": "2026-11-15T00:00:00.000Z",
+  "games": {
+    "game-001": {
+      "slots": {
+        "multiplier-ladder": {
+          "label": "Multiplier ladder (feature 6)",
+          "select": "game.json multiplier.variant (A-D), or debug panel",
+          "default": "v1",
+          "variants": [
+            {
+              "id": "v1",
+              "key": "A",
+              "name": "A. Fixed ladder",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Chosen default. x1 x2 x3 x5, FS x2 x4 x6 x10.",
+              "payScale": 1,
+              "buyPriceX": 50,
+              "rtp": 0.965,
+              "buyRtp": 0.954,
+              "report": "games/game-001/reports/A/"
+            },
+            {
+              "id": "v2",
+              "key": "B",
+              "name": "B. Endless +1",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Trying.",
+              "payScale": 1,
+              "buyPriceX": 51.5,
+              "rtp": 0.9682,
+              "buyRtp": 0.965,
+              "report": "games/game-001/reports/B/"
+            },
+            {
+              "id": "v3",
+              "key": "C",
+              "name": "C. Ladder persists in free spins",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Trying. FS ladder x2 x4 x5 x6.",
+              "payScale": 1.01,
+              "buyPriceX": 48.2,
+              "rtp": 0.9634,
+              "buyRtp": 0.966,
+              "report": "games/game-001/reports/C/"
+            },
+            {
+              "id": "v4",
+              "key": "D",
+              "name": "D. Multiplier spots",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Trying. Most volatile; spot cap 16, resets each free spin. No Cocos view yet.",
+              "payScale": 0.83,
+              "buyPriceX": 60,
+              "rtp": 0.9681,
+              "buyRtp": 0.97,
+              "report": "games/game-001/reports/D/"
+            }
+          ]
+        },
+        "spin-style": {
+          "label": "Spin style (feature 21)",
+          "select": "debug panel Spin style",
+          "default": "v1",
+          "variants": [
+            {
+              "id": "v1",
+              "key": "drop",
+              "name": "Card drop",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Default for Game 001."
+            },
+            {
+              "id": "v2",
+              "key": "scroll",
+              "name": "Scrolling reels",
+              "status": "active",
+              "added": "2026-11-09",
+              "runs": [],
+              "options": [],
+              "notes": "Alternative."
+            }
+          ]
+        }
+      }
     }
-  ]
+  }
 }

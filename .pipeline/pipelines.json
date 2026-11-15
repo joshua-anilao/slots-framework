@@ -1,0 +1,42 @@
+{
+  "feature": {
+    "label": "Code",
+    "command": "/feature",
+    "stages": [
+      {
+        "name": "planner",
+        "label": "Planner"
+      },
+      {
+        "name": "coder",
+        "label": "Coder"
+      },
+      {
+        "name": "tester",
+        "label": "Tester"
+      },
+      {
+        "name": "reviewer",
+        "label": "Reviewer"
+      }
+    ]
+  },
+  "quick": {
+    "label": "Quick fix",
+    "command": "/quick",
+    "stages": [
+      {
+        "name": "triager",
+        "label": "Triage"
+      },
+      {
+        "name": "coder",
+        "label": "Coder"
+      },
+      {
+        "name": "reviewer",
+        "label": "Reviewer"
+      }
+    ]
+  }
+}

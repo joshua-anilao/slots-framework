@@ -1,0 +1,5 @@
+{
+  "keepRunsDays": 30,
+  "activeGame": "game-001",
+  "variantsFile": "docs/VARIANTS.json"
+}
