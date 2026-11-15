@@ -7,8 +7,10 @@ import { finalGrid, planSpin, spinsOf } from '../client-cocos/assets/framework/b
 
 describe('board layout', () => {
   it('fits the board in the width and centres it', () => {
-    const l = computeLayout(5, 4, 680, 8);
-    expect(l.width).toBeLessThanOrEqual(680);
+    const l = computeLayout(5, 4, 128, 150, 6);
+    expect(l.width).toBe(5 * 128 + 4 * 6);
+    expect(l.height).toBe(600);
+    expect(l.cardW).toBeLessThan(l.cellW);
     expect(l.cell(0, 0).x).toBeCloseTo(-l.cell(4, 0).x);
     expect(l.cell(0, 0).y).toBeCloseTo(-l.cell(0, 3).y);
     expect(l.cell(0, 0).y).toBeGreaterThan(l.cell(0, 1).y); // row 0 is on top

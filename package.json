@@ -13,13 +13,14 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "sim": "tsx packages/simulator/src/cli.ts",
-    "check": "npm run typecheck && npm test && npm run check:cocos",
+    "check": "npm run typecheck && npm run typecheck:cocos && npm test && npm run check:cocos",
     "proto": "npm run dev -w @slots/prototype-web",
     "proto:build": "npm run build -w @slots/prototype-web",
     "sync:cocos": "tsx tools/syncCocos.ts",
     "check:cocos": "tsx tools/syncCocos.ts --check",
     "build:cocos": "node tools/buildCocos.mjs",
-    "report:assets": "tsx tools/assetReport.ts"
+    "report:assets": "tsx tools/assetReport.ts",
+    "typecheck:cocos": "node tools/typecheckCocos.mjs"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

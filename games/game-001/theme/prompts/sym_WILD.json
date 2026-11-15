@@ -1,0 +1,15 @@
+{
+  "asset": "sym_WILD",
+  "purpose": "Wild symbol for the slot game, the most eye-catching icon on the board",
+  "subject": "A golden fishball skewer with a burst of sparkles behind it and a ribbon banner across the lower third",
+  "composition": "Front view, centred, skewer slightly tilted, banner fully inside the frame, fills about 90 percent of the height",
+  "text": "\"WILD\" in chunky rounded bold letters on the ribbon banner, cream letters with a dark-brown outline",
+  "palette": "Rich metallic gold and warm yellow with chilli-red ribbon; outline dark brown #3a1f12",
+  "output": {
+    "width": 1024,
+    "height": 1200,
+    "transparent": true,
+    "count": 4
+  },
+  "notes": "Text-heavy: try ideogram-v3 or gpt-image-2 if FLUX misspells WILD."
+}

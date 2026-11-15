@@ -1,0 +1,9 @@
+{
+  "asset": "bg_main",
+  "purpose": "Portrait background behind the 5x4 reel grid of a mobile slot game; the centre will be covered by the reels",
+  "subject": "A lively Filipino night street-food market: food carts with striped awnings, string lights, a jeepney silhouette far away, steam rising from a cart",
+  "composition": "Portrait, eye level. Interesting detail only in the top 15 percent and bottom 20 percent of the frame; the middle 65 percent is a calm, slightly darker area with no strong detail",
+  "lighting": "Warm string lights and cart lamps against a deep indigo evening sky, soft glow",
+  "constraints": ["No people's faces in focus", "No text or signs with words"],
+  "output": { "width": 720, "height": 1280, "count": 2, "quality": "final" }
+}

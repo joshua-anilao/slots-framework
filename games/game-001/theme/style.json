@@ -1,0 +1,13 @@
+{
+  "model": "nano-banana-2",
+  "purpose": "Art for a mobile slot game called Fishball Fiesta, themed on Filipino street food, seen on a phone screen in portrait",
+  "style": "Semi-realistic 3D rendered food illustration, glossy and appetising, detailed surface texture, soft rounded shapes, polished mobile slot game symbol look",
+  "lighting": "Soft studio key light from the top left, warm rim light, a gentle darker shadow side, bright specular highlights on glossy surfaces",
+  "palette": "Rich, saturated, warm and appetising colours",
+  "constraints": [
+    "No watermark or signature",
+    "No real brand names",
+    "No cartoon outline"
+  ],
+  "notes": "Shared look for every Fishball Fiesta asset (semi-realistic glossy render, approved 2026-11-13). Old look kept for reference: flat sticker illustration with thick dark-brown outline #3a1f12, matching prototype-web/src/game/theme/foodArt.ts. Asset specs add subject, composition and output."
+}

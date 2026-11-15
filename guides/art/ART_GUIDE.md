@@ -70,7 +70,11 @@ We may use Spine later, so:
 - Spine export version pinned per project (match Cocos 3.8's supported runtime); JSON or binary `.skel` + atlas.
 - HTML prototype uses sprite views only (Spine optional later via pixi-spine if needed).
 
-## 6. Placeholders
+## 6. AI-generated drafts
+
+Draft art can be generated with fal.ai: prompt specs in `games/<id>/theme/prompts/`, the game's shared look in `games/<id>/theme/style.json`, results in `games/<id>/theme/generated/` (git-ignored). Prompting rules: `.claude/skills/image-prompting/`. Setup: `docs/FAL_AI_SETUP.md`. Drafts follow every rule in this guide (originality, sizes, frame names) and need Josh's OK before they go into an atlas.
+
+## 6b. Placeholders
 
 The framework ships a **placeholder theme** (colored shapes + text labels with the right frame names) so math and flow can be played before any art exists.
 

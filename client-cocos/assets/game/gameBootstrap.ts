@@ -6,7 +6,11 @@ import { CocosAudioBackend, CocosKeyValueStore } from '../framework/audio/cocosA
 import { BoardView } from '../framework/board/boardView';
 import { computeLayout } from '../framework/board/boardLayout';
 import { CocosRoundPresenter } from '../framework/board/cocosRoundPresenter';
-import type { IRoundHud } from '../framework/board/cocosRoundPresenter';
+import { FxLayer } from '../framework/fx/fxLayer';
+import { MultiplierBar } from '../framework/hud/multiplierBar';
+import { TitleBar } from '../framework/hud/titleBar';
+import { WinBox } from '../framework/hud/winBox';
+import { Overlays } from '../framework/overlays/overlays';
 import { SymbolView } from '../framework/board/symbolView';
 import { DebugPanel } from '../framework/debug/debugPanel';
 import { createCocosGame } from '../framework/bootstrap/createCocosGame';
@@ -16,7 +20,7 @@ import type { IScreenHost } from '../framework/screens/screenManager';
 import { hex, makeButton, makeLabel, uiNode } from '../framework/ui/uiKit';
 import { ASSET_GROUPS } from './assetManifest';
 import { SFX } from './audioManifest';
-import { BOARD_GAP, BOARD_MAX_WIDTH, FISHBALL_CARD_STYLE, NORMAL_TIMING } from './boardStyle';
+import { FISHBALL_CARD_STYLE } from './boardStyle';
 import { gameConfig } from './generated/gameConfig';
 
 const { ccclass } = _decorator;
@@ -73,37 +77,35 @@ export class GameBootstrap extends Component {
     const presenter = new CocosRoundPresenter();
     const game = createCocosGame({ config: gameConfig, presenter, debug, seed: params.has('seed') ? Number(params.get('seed')) : undefined });
 
-    // Board.
+    // Board and HUD, laid out like the prototype (design space 720 x 1280, y up).
     const { reels, rows } = gameConfig.grid;
-    const layout = computeLayout(reels, rows, BOARD_MAX_WIDTH, BOARD_GAP);
-    const board = new BoardView(gameLayer, reels, rows, layout, cell => new SymbolView(n => loader.frame(n), FISHBALL_CARD_STYLE, layout.card, cell), NORMAL_TIMING);
-    board.node.setPosition(0, 130, 0);
-
-    // HUD.
-    makeLabel(gameLayer, 'FISHBALL FIESTA', 56, '#ffd36b', 0, 560);
-    const multLabel = makeLabel(gameLayer, '', 36, '#ffffff', 0, 450);
-    const statusLine = makeLabel(gameLayer, '', 34, '#ffffff', 0, 400);
-    const winLabel = makeLabel(gameLayer, 'WIN 0.00', 44, '#ffffff', 0, -200);
-    const balanceLabel = makeLabel(gameLayer, '', 36, '#ffe9b0', 0, -270);
-    const betLabel = makeLabel(gameLayer, '', 36, '#ffe9b0', 0, -340);
-    const hud: IRoundHud = {
-      setWin: v => { winLabel.string = `WIN ${money(v)}`; },
-      setMultiplier: m => { multLabel.string = m > 1 ? `x${m}` : ''; },
-      setStatus: t => { statusLine.string = t; },
-    };
-    presenter.attach(board, hud, (name, level) => { audio.play(name, level); });
+    const layout = computeLayout(reels, rows, 128, 150, 6);
+    const title = new TitleBar(gameLayer, 'FISHBALL FIESTA', 0, 545);
+    const mult = new MultiplierBar(gameLayer, () => gameConfig, 640);
+    mult.node.setPosition(0, 455, 0);
+    const board = new BoardView(gameLayer, reels, rows, layout, cell => new SymbolView(n => loader.frame(n), FISHBALL_CARD_STYLE, layout.cardW, layout.cardH, cell), gameConfig.freeSpins.scatterSymbol);
+    board.node.setPosition(0, 110, 0);
+    // A ready grid so the board is never empty before the first spin.
+    const pool = gameConfig.symbols.filter(sym => sym.id !== gameConfig.wildSymbol && sym.id !== gameConfig.freeSpins.scatterSymbol).map(sym => sym.id);
+    board.setGrid(Array.from({ length: reels }, () => Array.from({ length: rows }, () => ({ s: pool[Math.floor(Math.random() * pool.length)]!, g: false }))));
+    const win = new WinBox(gameLayer, 0, -235);
+    const balanceLabel = makeLabel(gameLayer, '', 36, '#ffe9b0', 0, -300);
+    const betLabel = makeLabel(gameLayer, '', 36, '#ffe9b0', 0, -370);
+    const fx = new FxLayer(gameLayer, DESIGN_W, DESIGN_H);
+    const overlays = new Overlays(gameLayer);
+    presenter.attach({ board, mult, win, title, overlays, fx }, () => gameConfig, (name, level) => { audio.play(name, level); });
     game.models.wallet.balance.subscribe(v => { balanceLabel.string = `BALANCE ${money(v)}`; });
     game.models.bet.index.subscribe(() => { betLabel.string = `BET ${money(game.models.bet.bet)}`; });
 
     // Bet buttons loop around: past the highest goes to the lowest, and the other way.
     const last = game.models.bet.levels.length - 1;
-    makeButton(gameLayer, { w: 90, h: 70, x: -230, y: -340, text: '-', fill: '#f2b705', textColor: '#3a1f12' }, () => {
+    makeButton(gameLayer, { w: 90, h: 70, x: -230, y: -370, text: '-', fill: '#f2b705', textColor: '#3a1f12' }, () => {
       if (!game.controllers.bet.decrease()) game.controllers.bet.select(last);
     });
-    makeButton(gameLayer, { w: 90, h: 70, x: 230, y: -340, text: '+', fill: '#f2b705', textColor: '#3a1f12' }, () => {
+    makeButton(gameLayer, { w: 90, h: 70, x: 230, y: -370, text: '+', fill: '#f2b705', textColor: '#3a1f12' }, () => {
       if (!game.controllers.bet.increase()) game.controllers.bet.select(0);
     });
-    const spin = makeButton(gameLayer, { w: 260, h: 120, x: 0, y: -470, text: 'SPIN', fill: '#e11d48', textColor: '#ffffff', fontSize: 56, radius: 60 }, () => {
+    const spin = makeButton(gameLayer, { w: 260, h: 120, x: 0, y: -500, text: 'SPIN', fill: '#e11d48', textColor: '#ffffff', fontSize: 56, radius: 60 }, () => {
       audio.play('click');
       if (game.models.spin.isBusy) game.controllers.spin.skip();
       else void game.controllers.spin.spinOnce();

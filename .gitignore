@@ -22,3 +22,11 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Secrets (fal.ai key etc.): never commit
+.env
+.env.local
+.env.*.local
+
+# AI image drafts (keepers are copied out under their frame names)
+games/*/theme/generated/

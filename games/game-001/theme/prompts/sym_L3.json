@@ -1,0 +1,19 @@
+{
+  "asset": "sym_L3",
+  "purpose": "Low-value slot symbol icon for a mobile game, must read in half a second at 128 px",
+  "subject": "Pandesal: four soft golden bread rolls in a clear plastic bag with a folded paper top",
+  "composition": "Front view, centred, fills about 90 percent of the height, small even margin, strong simple silhouette",
+  "references": [
+    {
+      "image": "../source/sym_H1.png",
+      "role": "the rendering style only: material finish, glossy look, lighting and level of detail. Do not copy its subject"
+    }
+  ],
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2
+  },
+  "palette": "Warm golden brown bread, pale cream"
+}

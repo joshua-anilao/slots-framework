@@ -1,0 +1,29 @@
+{
+  "$comment": "Side-by-side alternatives. Written by the pipeline tool (P variant add/update) once it exists; until then edit by hand only with Josh's OK. Results are 10M-round sims from games/game-001/brief.md (2026-11-10).",
+  "variants": [
+    {
+      "id": "multiplier-ladder",
+      "feature": 6,
+      "game": "game-001",
+      "switch": "game.json multiplier.variant, or debug panel",
+      "chosen": "A",
+      "options": [
+        { "key": "A", "name": "Fixed ladder", "status": "Keep", "payScale": 1, "buyPriceX": 50, "rtp": 0.9650, "buyRtp": 0.954, "report": "games/game-001/reports/A/" },
+        { "key": "B", "name": "Endless +1", "status": "Trying", "payScale": 1, "buyPriceX": 51.5, "rtp": 0.9682, "buyRtp": 0.965, "report": "games/game-001/reports/B/" },
+        { "key": "C", "name": "Ladder persists in free spins", "status": "Trying", "payScale": 1.01, "buyPriceX": 48.2, "rtp": 0.9634, "buyRtp": 0.966, "report": "games/game-001/reports/C/" },
+        { "key": "D", "name": "Multiplier spots", "status": "Trying", "payScale": 0.83, "buyPriceX": 60, "rtp": 0.9681, "buyRtp": 0.970, "report": "games/game-001/reports/D/" }
+      ]
+    },
+    {
+      "id": "spin-style",
+      "feature": 21,
+      "game": "game-001",
+      "switch": "debug panel Spin style",
+      "chosen": "drop",
+      "options": [
+        { "key": "drop", "name": "Card drop", "status": "Keep" },
+        { "key": "scroll", "name": "Scrolling reels", "status": "Trying" }
+      ]
+    }
+  ]
+}

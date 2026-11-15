@@ -1,0 +1,10 @@
+{
+  "asset": "logo",
+  "model": "ideogram-v3",
+  "purpose": "Game logo for the top of the slot screen and the loading screen",
+  "subject": "The game title on a cream badge shaped like a street-food cart sign, two fishballs on a skewer crossing behind the right side of the badge",
+  "composition": "Centred, wide badge, title on two lines, everything inside the frame with a small margin",
+  "text": "Line 1: \"FISHBALL\" in large chunky rounded bold letters, golden yellow with a thick dark-brown outline. Line 2: \"FIESTA\" smaller, chilli red, same outline",
+  "output": { "width": 1536, "height": 768, "transparent": true, "count": 4, "quality": "final" },
+  "notes": "Spell check every result. If letters break, spell it in the text field as F-I-S-H-B-A-L-L."
+}

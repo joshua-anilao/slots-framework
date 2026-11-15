@@ -1,0 +1,19 @@
+{
+  "asset": "sym_H4",
+  "purpose": "High-value slot symbol icon for a mobile game, must read in half a second at 128 px",
+  "subject": "Filipino barbecue: three chunks of grilled pork on one bamboo skewer, glazed red-brown with charred edges and a sticky shine",
+  "composition": "Front view, ONE single bamboo skewer, straight and centred, fills about 90 percent of the height, strong simple silhouette",
+  "references": [
+    {
+      "image": "../source/sym_H1.png",
+      "role": "the rendering style only: material finish, glossy look, lighting and level of detail. Do not copy its subject"
+    }
+  ],
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2
+  },
+  "palette": "Deep red-brown glaze, charred dark brown, warm gold highlights"
+}

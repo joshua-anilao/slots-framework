@@ -1,0 +1,8 @@
+{
+  "asset": "bg_desktop",
+  "purpose": "Wide desktop backdrop shown outside the game frame; the game blurs and darkens it and covers the centre",
+  "subject": "A Filipino street-food market at dusk seen from a distance: rows of carts, string lights, banana-leaf plants",
+  "composition": "Wide landscape, simple shapes, all detail at the left and right edges, the centre third empty and soft",
+  "constraints": ["No text or signs with words", "No important detail in the centre"],
+  "output": { "width": 1920, "height": 1080, "count": 2, "quality": "final" }
+}

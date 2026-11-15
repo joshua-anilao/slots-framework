@@ -1,0 +1,13 @@
+{
+  "asset": "sym_H1",
+  "purpose": "High-value slot symbol icon, must read in half a second at 128 px",
+  "subject": "Four round golden-brown fishballs on a single bamboo skewer, glossy with thick sweet amber sauce dripping slightly",
+  "composition": "Front view, skewer vertical and centred, the food fills about 85 percent of the height, small even margin on all sides, strong simple silhouette",
+  "output": {
+    "width": 1024,
+    "height": 1200,
+    "transparent": true,
+    "count": 4
+  },
+  "notes": "Hero symbol: generate first, pick the best, then use it as a style reference for the rest of the set."
+}

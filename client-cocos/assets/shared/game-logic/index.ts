@@ -44,3 +44,7 @@ export type { IWinFeedService, WinFeedItem } from './services/winFeedService';
 
 export { createLocalGame } from './createLocalGame';
 export type { LocalGame, LocalGameOptions } from './createLocalGame';
+
+export { TIMINGS, Pace } from './presentation/pace';
+export type { Timing, SpinStyle } from './presentation/pace';
+export { STRINGS, money } from './presentation/strings';

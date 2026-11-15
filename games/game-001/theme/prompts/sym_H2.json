@@ -1,0 +1,19 @@
+{
+  "asset": "sym_H2",
+  "purpose": "High-value slot symbol icon for a mobile game, must read in half a second at 128 px",
+  "subject": "A tall glass of halo-halo dessert: a scoop of purple ube ice cream on top with a cherry, shaved ice, visible layers of red beans, jelly and cream, and a thin wafer stick",
+  "composition": "Front view, centred, fills about 90 percent of the height, small even margin, strong simple silhouette",
+  "references": [
+    {
+      "image": "../source/sym_H1.png",
+      "role": "the rendering style only: material finish, glossy look, lighting and level of detail. Do not copy its subject"
+    }
+  ],
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2
+  },
+  "palette": "Rich ube purple, cream, pink and warm gold"
+}

@@ -1,0 +1,23 @@
+{
+  "asset": "sym_L1",
+  "purpose": "Low-value slot symbol icon for a mobile game, must read in half a second at 128 px",
+  "subject": "Banana cue: three caramelised fried banana pieces on ONE single thin bamboo skewer, coated in shiny brown sugar caramel. Exactly one stick: its tip sticks out above the top piece and its lower end below the bottom piece",
+  "composition": "Front view, ONE single bamboo skewer, straight and centred, fills about 90 percent of the height, strong simple silhouette, no second stick",
+  "references": [
+    {
+      "image": "../source/sym_H1.png",
+      "role": "the rendering style only: material finish, glossy look, lighting and level of detail. Do not copy its subject"
+    }
+  ],
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2
+  },
+  "palette": "Golden yellow banana, deep caramel brown",
+  "constraints": [
+    "No second stick",
+    "No forked or doubled skewer"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "asset": "sym_L4",
+  "purpose": "Low-value slot symbol icon for a mobile game, must read in half a second at 128 px",
+  "subject": "Puto: three steamed white rice cakes in pleated paper cups, each topped with a small slice of yellow cheese, grouped in a pyramid",
+  "composition": "Front view, centred, fills about 90 percent of the height, small even margin, strong simple silhouette",
+  "references": [
+    {
+      "image": "../source/sym_H1.png",
+      "role": "the rendering style only: material finish, glossy look, lighting and level of detail. Do not copy its subject"
+    }
+  ],
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2
+  },
+  "palette": "Soft white and cream cakes, golden yellow cheese, light brown cups"
+}

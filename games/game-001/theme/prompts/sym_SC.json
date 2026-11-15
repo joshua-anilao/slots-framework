@@ -1,0 +1,17 @@
+{
+  "asset": "sym_SC",
+  "model": "ideogram-v3",
+  "purpose": "Scatter symbol for a mobile slot game that starts free spins, as eye-catching as the Wild",
+  "subject": "A tall cup of sorbetes (dirty ice cream) with three pastel scoops, a cone wafer and a small flag, with a bold ribbon banner across the lower third",
+  "composition": "Front view, centred, banner fully inside the frame, fills about 90 percent of the height, small even margin",
+  "text": "\"SCATTER\" in chunky bold cream letters with a thick dark-brown outline, on a chilli-red ribbon banner",
+  "palette": "Pastel pink, purple and cream ice cream, green cup, chilli-red banner",
+  "output": {
+    "width": 1024,
+    "height": 1280,
+    "transparent": true,
+    "count": 2,
+    "quality": "final"
+  },
+  "notes": "Contains text: read every result and check SCATTER is spelled right."
+}
