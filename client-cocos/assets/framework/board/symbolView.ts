@@ -101,6 +101,8 @@ export class SymbolView {
     this.artNode.getComponent(UITransform)!.setContentSize(size, size);
     this.artNode.setPosition(0, look.glyph ? 10 : 2, 0);
     this.glyph.node.active = !!look.glyph;
+    this.glyph.node.setPosition(0, -this.h * 0.3, 0);
+    this.glyph.fontSize = 24;
     this.glyph.string = look.glyph ?? '';
     this.glyph.color = hex(look.glyphColor ?? '#3a1f12');
     this.paintFoil(g);

@@ -7,12 +7,12 @@ The rule from now on: a Cocos drop is only "done" when its rows here are DONE an
 
 | # | Feature | Prototype | Cocos now | Gap |
 |---|---|---|---|---|
-| 3,21 | Spin, card drop, skip (slam) | yes | PART | Drop and skip work. No anticipation beam, no per-scatter ding, no turbo timings. |
-| 4,5 | Ways wins, cascades | yes | PART | Works. Winning cards only dim the others; no glow, no sparkle burst, no win amount popping over the board and flying to WIN. |
-| 6 | Multiplier | bar + steps + burst | PART | Number shown as text only. No multiplier bar with lit steps (A/B/C), no spots on the board (D). |
-| 7 | Golden to WILD | card flips to back, then WILD | PART | Cell just changes to WILD at the end of the drop. No flip, no sway on winning wild. |
-| 8 | Scatter and free spins | anticipation, dim and pulse, banner, ladder sweep, FS left counter, retrigger, outro count-up | NONE | Only plays the free spins one after another with a text line. No intro, outro, counter in the title, retrigger. |
-| 12 | Big / Super / Ultra win | overlay, coins, count-up | NONE | |
+| 3,21 | Spin, card drop, skip (slam) | yes | DONE | Drop-in, anticipation beam, per-scatter ding, tap to snap. Turbo button comes in Drop B. |
+| 4,5 | Ways wins, cascades | yes | DONE | Glow, sway, burst, win amount flies to WIN. |
+| 6 | Multiplier | bar + steps + burst | DONE | Bar for A/B/C, spots for D (spots not yet seen in browser). |
+| 7 | Golden to WILD | card flips to back, then WILD | DONE | Seen in browser. |
+| 8 | Scatter and free spins | anticipation, dim and pulse, banner, ladder sweep, FS left counter, retrigger, outro count-up | DONE | Intro, counter, ladder, outro seen in browser; retrigger not yet seen. |
+| 12 | Big / Super / Ultra win | overlay, coins, count-up | PART | Built, coins seen on the free spins outro; Big/Super/Ultra overlay not yet seen. |
 | 9 | Buy Bonus | window, price, quantity | NONE | Debug panel can buy one. |
 | 10 | Auto spin | window, counts, stop conditions, STOP | NONE | |
 | 11 | Turbo / super turbo | button cycles, toast, timings | NONE | |
@@ -21,7 +21,7 @@ The rule from now on: a Cocos drop is only "done" when its rows here are DONE an
 | 14 | Marquee | yes | NONE | |
 | 15 | Connection bars | yes | NONE | |
 | 2 | Balance, footer (round id, version) | yes | PART | Balance only. |
-| 20 | Sound | all hooks | PART | Spin, reel stop, win, pop only. Missing scatter, multiplier, to-wild, fly, big win, coin, FS intro, retrigger, anticipation hooks. |
+| 20 | Sound | all hooks | DONE | All hooks wired (by ear: Josh to check). |
 
 ## Screens and windows
 

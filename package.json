@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "sim": "tsx packages/simulator/src/cli.ts",
     "check": "npm run typecheck && npm run typecheck:cocos && npm test && npm run check:cocos",
+    "sim:compare": "tsx tools/sim-compare.ts",
     "proto": "npm run dev -w @slots/prototype-web",
     "proto:build": "npm run build -w @slots/prototype-web",
     "sync:cocos": "tsx tools/syncCocos.ts",

@@ -1,6 +1,6 @@
 # Pipeline rules (for the main session running a command)
 
-Slots Framework copy, adapted from RapidPro (Unity) on 2026-11-15. Agents, commands and skills live in `.pipeline/setup/claude/` and are copied into `.claude/` by `.pipeline/setup/install-claude-files.mjs` (run by `start-pipeline.cmd`). Edit the copies here, not in `.claude/`.
+Slots Framework copy, adapted from RapidPro (Unity) on 2026-11-15. Agents, commands and skills live in `.pipeline/setup/claude/` and are copied into `.claude/` by `.pipeline/setup/install-claude-files.mjs` (run by `start-pipeline.cmd`). Edit the copies here, not in `.claude/`. After adding or changing an **agent**, restart Claude Code: agents load only at startup (commands and skills load at once). A conductor that gets `Agent type '<name>' not found` must stop and ask for a restart, never stand in a general-purpose agent.
 
 You are the conductor. Subagents cannot launch other subagents, so you launch each agent in order, pass it the run folder, and log every step so the dashboard shows it. `P` below means `node .pipeline/tools/pipeline.mjs`.
 
