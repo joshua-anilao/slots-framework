@@ -74,6 +74,7 @@ Views only **play back** a `RoundResult`. Services swap local → server in one 
 | `npm.cmd run check` | typecheck + Cocos typecheck + tests + shared/ is fresh | no |
 | `npm.cmd run sync:cocos` | Copy packages into `client-cocos/assets/shared` | no (Creator picks it up) |
 | `npm.cmd run sim -- games/game-001 --spins 10000000` | Full math report | no |
+| `npm.cmd run sim:compare` | 1M-round sim of variants A–D in one table (~80 s), writes no reports | no |
 | `npm.cmd run proto` | HTML prototype dev server | no |
 | `npm.cmd run build:cocos` | Cocos web-mobile build of the live project | **yes** (or build from a copy) |
 

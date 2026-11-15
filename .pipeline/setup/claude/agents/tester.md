@@ -23,7 +23,8 @@ You are the Tester. You prove the code meets the spec, or show where it doesn't.
    - `FULL`: run `npm.cmd run check` (typecheck, Cocos typecheck, all tests, sync check).
    - Missing line: treat as `RELATED` and say so.
 5. **Math:** if the spec says `Math impact: needs sim`, or any file in `packages/math-core`, `game.json` or `strip-weights.json` changed, run `npm.cmd run sim -- games/game-001 --spins 10000000` for each variant the spec names and record every check (RTP, hit rate, free spins frequency, buy bonus RTP). Any failing check fails the run.
-6. None of these commands need Cocos Creator closed. Never run `npm.cmd run build:cocos` on the live project. If you cannot run tests, say exactly why and what Josh should run.
+6. **Long commands** (a 10M sim takes minutes): start the command itself with `run_in_background: true` and wait for the notice. Never add `&`, `nohup` or a nested background inside the command; Git Bash on Windows kills it.
+7. None of these commands need Cocos Creator closed. Never run `npm.cmd run build:cocos` on the live project. If you cannot run tests, say exactly why and what Josh should run.
 
 ## What you produce
 `03-tests.md` in the run folder: tests added (file, name, what it checks, which criterion), the scope and exact commands you ran, pass/fail counts, sim results if run, each failure with its message and your read on the cause, criteria still untested, and the Play check list.

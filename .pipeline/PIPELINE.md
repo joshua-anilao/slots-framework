@@ -39,6 +39,12 @@ For "let me try this and see" requests. Same stages, lighter:
 - If Josh keeps it, run `/iterate <RUN_ID> harden` to add the full tests and `npm run check`. If he drops it, run `/iterate <RUN_ID> remove` (removes code, toggle and registry row).
 - The final message says "experiment: not fully tested".
 
+## Tooling runs
+A run that only adds or changes dev tooling (`tools/`, `.pipeline/`, scripts in `package.json`, docs) and no game behaviour: no feature number, no `docs/FEATURES.md` row, no Play check. It gets a `docs/TUNING.md` row only if it adds a value Josh tunes by hand, and a line in `docs/agents/project.md` §5 if it adds a command. The planner marks it `Kind: tooling` at the top of `01-spec.md`.
+
+## Files a run changed
+`P diff` keeps only files the run's agents wrote with Write or Edit (from `events.jsonl`) plus generated output (`client-cocos/assets/shared/`, `generated/`, `sync-manifest.json`, `games/*/reports/`). Anything else that changed while the run was open (another session, Josh, a script) is listed under `outside` in `changes.json` and printed as `OUTSIDE:`; it is not in the diff or the files to commit. So agents create and change files only with Write or Edit, never with shell redirects. Name the `outside` files in the final message so Josh knows they are not this run's.
+
 ## Feature registry
 After PASS, update `docs/FEATURES.md`: add or edit the row (feature number, status, how to switch it: `game.json` key or debug panel, run id). Mutually exclusive alternatives still go through Variants. Each time a run touches a `Trying` feature, ask in the final message whether to mark it `Keep` or `Drop`.
 
@@ -80,7 +86,7 @@ Follow `docs/agents/handoff-format.md` ("Final report"):
 2. Commit message in Josh's format (`ADDED|UPDATED|FIXED: ...` plus 2–6 bullets), taken from the review.
 3. Items to commit: exact paths, including Cocos `.meta` files next to new assets and regenerated `assets/shared/`; flag unrelated changed files.
 4. How to check: commands with expected counts, and the Play check.
-5. Anything waiting on Josh (open gates, `Trying` features to mark Keep or Drop).
+5. Anything waiting on Josh: open gates, `Trying` features to mark Keep or Drop, and the reviewer's **Should fix** items, numbered, each with a ready `/iterate <RUN_ID> <fix>` line. Never apply Should-fix items inside the run; Josh picks.
 6. Code runs that add or change visuals, sounds or timing: a "Values you can tune yourself" line (3–5 fields with file and key) from `docs/TUNING.md`. If the run added a tunable, the coder adds its row; the reviewer checks it.
 7. `Prompt rating: N/10` plus one fix for the request, then the reminder to commit before the next run.
 

@@ -28,6 +28,30 @@ import {
 } from './lib.mjs';
 import { snapshot, runChanges } from './changes.mjs';
 
+/** Paths (repo-relative, lower case, "/") that the given runs' agents wrote with Write, Edit, MultiEdit or NotebookEdit. */
+function editedFiles(runIds) {
+  const root = projectRoot().replace(/\\/g, '/').replace(/\/$/, '').toLowerCase();
+  const out = new Set();
+  for (const rid of runIds) {
+    let text = '';
+    try { text = fs.readFileSync(path.join(runDir(rid), 'events.jsonl'), 'utf8'); } catch { continue; }
+    for (const line of text.split('\n')) {
+      if (!line.includes('"tool.start"')) continue;
+      let e; try { e = JSON.parse(line); } catch { continue; }
+      if (!/^(Write|Edit|MultiEdit|NotebookEdit)$/.test(e.tool || '')) continue;
+      const detail = typeof e.detail === 'string' ? e.detail : JSON.stringify(e.detail || {});
+      const m = detail.match(/"(?:file_path|notebook_path)"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (!m) continue;
+      let p = JSON.parse(`"${m[1]}"`).replace(/\\/g, '/');
+      const lower = p.toLowerCase();
+      if (lower.startsWith(root + '/')) p = p.slice(root.length + 1);
+      out.add(p.toLowerCase());
+    }
+  }
+  return out;
+}
+
+
 const [, , cmd, ...rest] = process.argv;
 const args = {};
 for (let i = 0; i < rest.length; i++) {
@@ -188,12 +212,31 @@ switch (cmd) {
       base = rootBase;
     }
     if (base) {
-      const { files, diff } = runChanges(projectRoot(), base, only);
+      // Files another session or tool changed while this run was open are not this run's work. A file counts as this
+      // run's when one of its agents wrote it with Write/Edit (from events.jsonl), or when it is generated output of a
+      // command the run ran (shared/ copy, generated config, sim reports). Everything else goes to "outside".
+      const runIds = [id];
+      if (args.since) {
+        const first = readJson(path.join(runDir(args.since), 'run.json'));
+        const rootId = first ? (first.root || first.id) : null;
+        for (const rid of fs.readdirSync(runsDir())) {
+          const r = readJson(path.join(runDir(rid), 'run.json'));
+          if (r && (r.root || r.id) === rootId && !runIds.includes(rid)) runIds.push(rid);
+        }
+      }
+      const touched = editedFiles(runIds);
+      const GENERATED = [/^client-cocos\/assets\/shared\//, /^client-cocos\/assets\/game\/generated\//, /^client-cocos\/sync-manifest\.json$/, /^games\/[^/]+\/reports\//];
+      const mine = (p) => touched.has(p.toLowerCase()) || touched.has(p.replace(/\.meta$/, '').toLowerCase()) || GENERATED.some((r) => r.test(p));
+      const all = runChanges(projectRoot(), base, only).files;
+      const keep = new Set(all.filter((f) => mine(f.path)).map((f) => f.path));
+      const outside = all.filter((f) => !keep.has(f.path)).map((f) => f.path);
+      const { files, diff } = keep.size ? runChanges(projectRoot(), base, keep) : { files: [], diff: '' };
       fs.writeFileSync(path.join(runDir(id), 'changes.diff'), diff || '(no changes)\n');
-      writeJson(path.join(runDir(id), 'changes.json'), { at: new Date().toISOString(), files });
+      writeJson(path.join(runDir(id), 'changes.json'), { at: new Date().toISOString(), files, outside });
       const n = (st) => files.filter((f) => f.status === st).length;
-      appendEvent(id, { type: 'file', agent: 'main', file: 'changes.diff', text: `Saved diff: ${n('added')} added, ${n('modified')} modified, ${n('deleted')} deleted` });
+      appendEvent(id, { type: 'file', agent: 'main', file: 'changes.diff', text: `Saved diff: ${n('added')} added, ${n('modified')} modified, ${n('deleted')} deleted${outside.length ? `; ${outside.length} changed outside this run` : ''}` });
       console.log(`.pipeline/runs/${id}/changes.diff (${files.length} files changed by this run)`);
+      if (outside.length) console.log(`OUTSIDE: ${outside.length} file(s) changed while the run was open but not by its agents (another session, Josh, or a script). Left out of the diff; listed in changes.json "outside":\n  ${outside.join('\n  ')}`);
       break;
     }
     let out = '';

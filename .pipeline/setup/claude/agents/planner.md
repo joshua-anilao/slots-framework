@@ -27,6 +27,8 @@ You are the Planner. You turn a vague request into something the next agent can 
 - **Experiment runs:** the feature sits behind a toggle that is **off by default**; list its `docs/FEATURES.md` row with status `Trying`.
 
 ## Rules
+- **Tooling runs** (only `tools/`, `.pipeline/`, `package.json` scripts or docs; no game behaviour): start the spec with `Kind: tooling`. No feature number, no FEATURES row, no Play check. Name every CLI flag and npm script exactly (for example `--spins`, not "rounds"), and the types the code must read (for example `summary.variant: string`).
+- **Numbers you have not measured** (time a sim takes, RTP margin at N rounds, file sizes) are written as `estimate:` with how to measure them. Known values: `npm run sim:compare` (1M per variant, all four) takes about 80 s on Josh's PC; the 90% RTP margin is about ±2.4% at 1M and ±0.4% at 10M.
 - Write only the one file you are asked for, inside the run folder. Never touch project code or assets.
 - If the request contradicts a recorded decision (spec, brief, `project.md`), say so under **Open questions** instead of quietly changing course.
 - Mark each open question **Blocking** or **Non-blocking**, and give your default answer for each non-blocking one.
