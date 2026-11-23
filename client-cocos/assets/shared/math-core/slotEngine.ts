@@ -3,6 +3,7 @@ import type { GameConfig } from './config';
 import type { FreeSpinsOutcome, RoundResult, SpinOutcome } from './result';
 import type { IRng } from './rng';
 import type { IMultiplierStrategy } from './multiplierStrategy';
+import { GoldBank } from './goldBank';
 import { createMultiplier } from './multipliers';
 import { buyPriceX } from './pricing';
 import { round2, SpinRunner } from './spinRunner';
@@ -46,6 +47,7 @@ export class SlotEngine {
 
     const fullDetail = req.detail !== 'summary';
     const multiplier = createMultiplier(c);
+    const bank = new GoldBank(c.goldBank);
     const cap = c.maxWinX * req.bet;
     let total = 0;
     let capped = false;
@@ -55,7 +57,7 @@ export class SlotEngine {
     if (buy) {
       toAward = c.freeSpins.spins;
     } else {
-      const r = this.runner.run(multiplier, { isFree: false, bet: req.bet, capRemaining: cap, fullDetail, forcedStops: req.force?.stops });
+      const r = this.runner.run(multiplier, bank, { isFree: false, bet: req.bet, capRemaining: cap, fullDetail, forcedStops: req.force?.stops });
       capped = r.capped;
       base = r.outcome;
       total += base.spinWin;
@@ -65,7 +67,7 @@ export class SlotEngine {
 
     let freeSpins: FreeSpinsOutcome | null = null;
     if (toAward > 0 && !capped) {
-      const fs = this.playFreeSpins(toAward, req.bet, cap - total, fullDetail, multiplier);
+      const fs = this.playFreeSpins(toAward, req.bet, cap - total, fullDetail, multiplier, bank);
       freeSpins = fs.outcome;
       total += freeSpins.totalWin;
       capped = fs.capped;
@@ -89,9 +91,10 @@ export class SlotEngine {
   }
 
   private playFreeSpins(initial: number, bet: number, capRemaining: number, fullDetail: boolean,
-    multiplier: IMultiplierStrategy): { outcome: FreeSpinsOutcome; capped: boolean } {
+    multiplier: IMultiplierStrategy, bank: GoldBank): { outcome: FreeSpinsOutcome; capped: boolean } {
     const fs = this.config.freeSpins;
     multiplier.startFeature();
+    bank.startFeature();
     let left = initial;
     let awarded = initial;
     let retriggers = 0;
@@ -100,7 +103,7 @@ export class SlotEngine {
     const spins: SpinOutcome[] = [];
     while (left > 0) {
       left--;
-      const r = this.runner.run(multiplier, { isFree: true, bet, capRemaining: capRemaining - win, fullDetail });
+      const r = this.runner.run(multiplier, bank, { isFree: true, bet, capRemaining: capRemaining - win, fullDetail });
       const spin = r.outcome;
       win += spin.spinWin;
       spins.push(spin);

@@ -1,5 +1,5 @@
 PAR SHEET,Fishball Fiesta,version 0.1.0
-Generated,2026-11-10T19:09:49.803Z,Seed,20261109,Rounds,10000000,Variant,A
+Generated,2026-11-22T15:17:20.516Z,Seed,20261109,Rounds,10000000,Variant,A
 
 SUMMARY
 RTP total,0.965014
@@ -14,8 +14,8 @@ Average cascades per spin,0.644803
 Max win seen (x bet),999.871000
 Max win cap (x bet),2000,Cap hits,0
 Buy bonus price (x bet),50
-Buy bonus RTP,0.953812
-Buy bonus average win (x bet),47.690585
+Buy bonus RTP,0.955577
+Buy bonus average win (x bet),47.778870
 
 WIN DISTRIBUTION,Rounds,Probability,RTP contribution
 0x,6146180,0.614618,0

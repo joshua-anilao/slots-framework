@@ -19,7 +19,10 @@ Ask Josh before adding anything new here (see the Programming Guide, framework v
 | Round playback | `cascade/htmlRoundPresenter.ts` | Plays a Spin Result step by step (spin, wins, cascades, multiplier steps, free spins, banners, big win); has the playback state machine | pass it to `createLocalGame` as the round presenter |
 | Winner notice | `views/winnerNotice.ts` | Notice shown over the multiplier bar | used by the presenter |
 | Buy Bonus | `windows/buyBonusWindow.ts` | Buy free spins popup (a game turns it on in its config) | `openBuyBonusWindow(host, game, onBuy)` from a HUD callback |
+| Character stage (22) | `views/characterStage.ts`, `character/characterRig.ts`, `puppetRig.ts`, `characterReactions.ts` | Scene at the top with a 2D character that reacts to finished rounds (idle, smallWin, bigWin, lose, nearMiss, bonus) via presenter cues (`presenter.onCue`) and the `winTier` event; logo sits in its bottom-right slot | the game's theme supplies `character` (`{ kind: 'puppet', parts }`); none = empty stage |
 | Debug panel | `debug/debugPanel.ts` | Session-only overrides (force result, network tools) | `new DebugPanel(...)` when `?debug` is on |
+
+**Character and the Spine seam.** The reaction controller only talks to `CharacterRig` (`play(state, loop, ms)`, `enter(ms)`). Today the rig is the cut-out puppet (`puppetRig.ts`: bones are divs, poses come from `PUPPET_CLIPS`, played with `element.animate`). A game gives only the art pieces (`game/theme/characterArt.ts`, like `foodArt.ts`). For a Spine export the theme will use `{ kind: 'spine', skeletonUrl, atlasUrl, animations }`; `createCharacterRig` warns and falls back for now, and a later `SpineRig` (spine-player) drops in behind the same interface. Reactions: `reactionFor(result, ...)` is pure; the controller's state machine ignores moves that do not fit (bigWin is not cut by smallWin; bonus ends only on `bonusEnd`). Tunables: `DEFAULT_CHARACTER_CONFIG` (see `docs/TUNING.md`).
 
 State machines live in `packages/game-logic` (`StateMachine`, used by the spin flow, auto spin and connection) and in `cascade/htmlRoundPresenter.ts` for playback.
 

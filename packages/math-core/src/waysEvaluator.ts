@@ -1,8 +1,14 @@
 import type { GameConfig, SymbolConfig } from './config';
+import { goldBankMode } from './goldBank';
 import type { Grid, Pos, WaysWin } from './result';
 
-/** Pay scale of the active multiplier variant (1 when not set). */
-export const payScale = (config: GameConfig): number => config.multiplier.payScale?.[config.multiplier.variant] ?? 1;
+/** Pay scale of the active multiplier variant (1 when not set), times the gold bank mode's pay scale when the bank is on. */
+export const payScale = (config: GameConfig): number => {
+  const variantScale = config.multiplier.payScale?.[config.multiplier.variant] ?? 1;
+  const mode = goldBankMode(config);
+  if (mode === 'off') return variantScale;
+  return variantScale * (config.goldBank?.tuning?.[mode]?.payScale ?? 1);
+};
 
 /**
  * Finds every ways win on a grid: a symbol (or wild) on adjacent reels from the left,

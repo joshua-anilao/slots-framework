@@ -111,6 +111,7 @@ Every hand-off ends with, in this order (details in `handoff-format.md`):
 | tester | the run's `01-spec.md` and `02-implementation.md`, `guides/programming/` §10, `slots-verify`; `docs/MATH_ENGINE_GUIDE.md` for math work |
 | reviewer | the whole run folder, `guides/programming/`, `bug-check` skill, `handoff-format.md` |
 | triager | `bug-check` skill, `glossary.md` |
+| game-security-auditor | `game-security-audit` skill, `bug-check` skill, `glossary.md`, `FRAMEWORK_SPEC.md`, `docs/MATH_ENGINE_GUIDE.md`, the game's `game.json` and `brief.md` |
 | art work | `guides/art/ART_GUIDE.md`, `games/<id>/guides/art.md`, `docs/ART_WORKFLOW.md`, `image-prompting` skill |
 | design / UX | `guides/design/DESIGN_GUIDE.md`, `docs/SCREENS_AND_FEATURES.md` |
 
@@ -123,6 +124,7 @@ Every hand-off ends with, in this order (details in `handoff-format.md`):
 | tester | Sonnet | medium | Tests per acceptance criterion → `03-tests.md` |
 | reviewer | Opus | high | Read only → `04-review.md` with verdict and commit message |
 | triager | Haiku | low | Small bug → `01-triage.md`: QUICK or ESCALATE |
+| game-security-auditor | Opus | high | Read only, on request → `security-audit.md`: exploits, server-authority gaps, exploit chains, business priority |
 | art-log | (existing, `agents/art-log.md`) | | Art log entries |
 
 The pipeline runs in **Claude Code on Josh's PC** with Creator open. Planning and review talk can also happen in the claude.ai project threads.

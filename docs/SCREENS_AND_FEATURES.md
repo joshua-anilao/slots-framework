@@ -33,13 +33,16 @@ Boot ─► Loading ─(Continue)─► Tutorial? ─► Game
 
 | Area | Elements |
 |---|---|
-| **Top bar** | **Winner ticker**: "JOS\*\*\*\* just won ₱15,000!" sliding notification. **Scrolling marquee** text (promos/messages from config) |
-| **Header** | Game logo; **Buy Bonus** button (top-right) |
-| **Multiplier bar** | Ladder steps (base x1 x2 x3 x5; free spins x2 x4 x6 x10), current step lit; free spins counter during feature |
+Prototype layout v2 (720 × 1280), top to bottom:
+
+| Area | Elements |
+|---|---|
+| **Character stage** (feature 22) | Scene with a 2D character that reacts to results (idle, small win, big win, lose, near miss, bonus). **Game logo** at its bottom-right; during free spins the logo spot shows FREE SPINS LEFT n / N |
+| **Multiplier bar** | Ladder steps (base x1 x2 x3 x5; free spins x2 x4 x6 x10), current step lit. **Winner ticker** ("JOS\*\*\*\* just won ₱15,000!") slides over it |
 | **Reels** | 5 columns × 4 rows; golden symbols on reels 2–4; win highlights, cascades |
-| **Win row** | WIN ₱amount |
-| **Control bar** | Settings (left), **Bet** button showing current bet (opens Change Bet window), **Spin** (center, big), **Auto spin**, **Turbo** (cycles normal → turbo → super turbo, toast "Super Turbo Spin Enabled/Disabled") |
-| **Footer** | **Balance** ₱; **Wifi/connection strength** icon; version; round/transaction id |
+| **Banner strip** | **Scrolling marquee** text (promos/messages from config); the **WIN ₱amount** pill fades in over it when a round has a win. Round **Buy Bonus** badge at its right end |
+| **Control row** | Round buttons with captions: Menu, **Bet** (caption shows current bet, opens Change Bet window), **Spin** (centre, big), **Auto spin**, **Turbo** (cycles normal → turbo → super turbo, toast "Super Turbo Spin Enabled/Disabled") |
+| **Footer** | **Balance** pill (centre); small sound, **Wifi/connection strength** icon, round/transaction id, version on the right |
 
 ## 4. Popups and windows
 
@@ -112,6 +115,8 @@ Implementation: one `ReelView` per column with a symbol strip that recycles symb
 | 19 | Debug panel | `debug` | — | Session-only overrides |
 | 20 | Sound | `audio` | — | |
 | 21 | **Reel spinning** (the visual spin) | `reelSpin` | — | Reels spin, stop in order, land on the Spin Result grid. See section 4b |
+| 22 | **Character stage** | `character` | — | 2D character on top that reacts to decided results; rig interface with a Spine seam; placeholder puppet in the prototype |
+| 23 | **Gold Frame Bank** | goldBank | yes | Golden cards may carry a value badge; a winning badge is banked and added to the cascade multiplier from the next step. Resets every spin, or carries through free spins (carryInFree). Off by default |
 
 ## 6. Cascading multiplier: variants to try in the prototype
 

@@ -1,0 +1,116 @@
+/* Layout "stage" (feature 22, reference portrait layout). Every rule is scoped to .screen.layout-stage,
+   so the classic layout in styles.css is untouched. Pick it with ?layout=stage (main.ts LAYOUTS).
+   Rows (design px, 720x1280, v4 reference proportions): stage 340, multiplier 50, gap 6, reel frame 656 (cells 130x158), gap 8,
+   strip 44, gap 6, controls 136, footer 34 = 1280. Every size below is a variable (rows in docs/TUNING.md, "Layout (prototype)"). */
+.layout-stage {
+  --stage-h: 340px;
+  --stage-mult-h: 50px;
+  --stage-row-w: 698px;         /* board frame width (5 cells + gaps + padding); the multiplier row and the strip match it */
+  --stage-gap-board: 6px;       /* multiplier bar to board */
+  --stage-gap-strip: 8px;       /* board to banner strip */
+  --stage-gap-controls: 6px;    /* banner strip to controls */
+  --stage-gap-footer: 0px;      /* controls to footer */
+  --stage-strip-h: 44px;
+  --stage-buy-size: 80px;       /* round Buy Bonus badge, at the right edge of the board frame */
+  --stage-buy-gap: 10px;        /* clear space between the pill / marquee and the badge */
+  --stage-controls-h: 136px;
+  --stage-ctl-size: 72px;       /* round control circles */
+  --stage-ctl-h: 94px;          /* circle + caption */
+  --stage-spin-size: 128px;
+  --stage-footer-h: 34px;
+  --stage-logo-w: 400px;
+  --stage-actor-scale: .95;
+  --stage-actor-left: 40px;
+  --stage-actor-bottom: -50px;  /* negative: the lower body is cut off by the stage edge */
+  --stage-toast-top: 190px;
+  --marquee-inset: 24px;        /* about half the strip height */
+}
+.layout-stage .char-stage, .layout-stage .mult-wrap, .layout-stage .reel-frame,
+.layout-stage .banner-strip, .layout-stage .controls, .layout-stage .footer { flex: none; }
+
+/* Character stage: scene + character, logo at the bottom-right */
+.layout-stage .char-stage { position: relative; width: 100%; height: var(--stage-h); overflow: hidden; border-bottom: 2px solid rgba(245,197,66,.45);
+  background: linear-gradient(180deg, #4a2467, #1a0b2b); }
+.layout-stage .char-actor { position: absolute; left: var(--stage-actor-left); bottom: var(--stage-actor-bottom);
+  transform: scale(var(--stage-actor-scale)); transform-origin: 0 100%; } /* scaled so the hat and raised arms stay inside the stage */
+.layout-stage .character-puppet { position: relative; }
+.layout-stage .character-puppet .bone svg { display: block; width: 100%; height: 100%; }
+/* The logo (or FREE SPINS LEFT) is centred, its bottom edge on the stage/board seam. Centred with auto margins, not transform: the intro animates transform. */
+.layout-stage .char-stage .header { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: 0; width: var(--stage-logo-w); height: auto; min-height: 0; }
+.layout-stage .logo-main { font-size: 52px; }
+
+/* Banner strip: marquee (or the WIN pill) and, beside it, the round Buy Bonus badge. The badge is taller than the strip,
+   so the gaps above and below the strip leave room for it. */
+.layout-stage .banner-strip { position: relative; width: var(--stage-row-w); height: var(--stage-strip-h); margin-top: var(--stage-gap-strip); margin-bottom: var(--stage-gap-controls); }
+.layout-stage .top-bar { width: calc(100% - var(--stage-buy-size) - var(--stage-buy-gap)); height: 100%; border: 1px solid rgba(245,197,66,.3);
+  border-radius: calc(var(--stage-strip-h) / 2); transition: opacity .3s; }
+.layout-stage .banner-strip.show-win .top-bar { opacity: 0; }
+
+/* Round Buy Bonus badge at the strip's right end: its top on the strip's top edge, so it hangs down over the gap above the controls.
+   Clear of the board above and of the control circles below (they sit lower: see .controls). */
+.layout-stage .buy-btn { right: 0; top: 0; margin: 0; z-index: 3; width: var(--stage-buy-size); height: var(--stage-buy-size);
+  padding: 0; border-radius: 50%; font-size: 17px; overflow: clip; }
+
+/* Multiplier bar, slimmer */
+.layout-stage .mult-wrap { width: var(--stage-row-w); height: var(--stage-mult-h); }
+.layout-stage .winner-notice { inset: 3px 0; border-radius: 22px; font-size: 24px; }
+.layout-stage .mult-bar { width: var(--stage-row-w); height: var(--stage-mult-h); }
+.layout-stage .mult-bar .step { height: 40px; font-size: 26px; }
+.layout-stage { --bank-pot-value-size: 22px; --mult-bank-step-size: 26px; --bank-pot-width: 112px; }
+/* Bank pot: one row ("BANK +n"), fully inside the multiplier row with 8 px left on every side (the old pot was taller than the row and got clipped) */
+.layout-stage .bank-pot { right: 8px; height: 34px; margin-top: -17px; flex-direction: row; gap: 6px; border-radius: 12px; }
+.layout-stage .bank-pot .bank-label { font-size: 11px; letter-spacing: 1px; }
+
+/* Reels: cells 130x158 (main.ts CELL_SIZE); padding 9 + border 3 keeps WILD / SCATTER (112%) inside the frame's outer edge */
+.layout-stage .reel-frame { padding: 9px; margin-top: var(--stage-gap-board); }
+
+/* WIN pill over the marquee, fades in when a round has a win. Three columns: WIN label | value (always centred) | empty */
+.layout-stage .win-box { position: absolute; inset: 0 auto 0 0; width: calc(100% - var(--stage-buy-size) - var(--stage-buy-gap)); height: auto; margin-top: 0;
+  border-radius: calc(var(--stage-strip-h) / 2); background: rgba(0,0,0,.6);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 14px; padding: 0 20px;
+  border: 2px solid rgba(245,197,66,.6); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.layout-stage .banner-strip.show-win .win-box { opacity: 1; }
+.layout-stage .win-label { justify-self: end; }
+.layout-stage .win-value { font-size: 28px; line-height: 1; }
+.layout-stage .win-label { font-size: 18px; }
+
+/* Round controls: a round circle (::before, --stage-ctl-size) with the caption under it; Spin is the big one in the middle */
+/* Circles sit at the bottom of the row (below the Buy Bonus badge, which hangs over the top right); Spin stays centred */
+.layout-stage .controls { height: var(--stage-controls-h); margin-top: 0; margin-bottom: var(--stage-gap-footer); align-items: flex-end; padding: 0 12px 2px; }
+.layout-stage .ctl { position: relative; width: var(--stage-ctl-size); height: var(--stage-ctl-h); background: none; border: 0; padding: 0; overflow: visible; }
+.layout-stage .ctl::before { content: ""; position: absolute; left: 0; top: 0; width: var(--stage-ctl-size); height: var(--stage-ctl-size); border-radius: 50%;
+  background: rgba(255,255,255,.1); border: 2px solid rgba(255,255,255,.18); box-shadow: 0 3px 0 rgba(0,0,0,.35); }
+.layout-stage .ctl .ic { position: absolute; left: 0; top: 0; width: var(--stage-ctl-size); height: var(--stage-ctl-size); display: grid; place-items: center; font-size: 30px; line-height: 1; }
+.layout-stage .ctl .lb { position: absolute; left: -10px; right: -10px; top: calc(var(--stage-ctl-size) + 3px); text-align: center; font-size: 14px; font-weight: 800; color: var(--muted); letter-spacing: 1px; }
+/* BET: the word BET is in the circle, the bet value is the caption under it */
+.layout-stage .bet-btn .lb { top: 0; left: 0; right: 0; height: var(--stage-ctl-size); display: grid; place-items: center; font-size: 18px; color: var(--text); }
+.layout-stage .bet-btn .bet-val { position: absolute; left: -10px; right: -10px; top: calc(var(--stage-ctl-size) + 3px); text-align: center; font-size: 16px; font-weight: 900; color: var(--gold); }
+.layout-stage .speed-ic { font-size: 24px !important; letter-spacing: -5px; }
+.layout-stage .turbo-btn[data-mode] { border-color: transparent; box-shadow: none; }
+.layout-stage .turbo-btn[data-mode="turbo"]::before { border-color: var(--gold); box-shadow: 0 0 14px rgba(245,197,66,.6); }
+.layout-stage .turbo-btn[data-mode="super"]::before { border-color: #ff4f8b; box-shadow: 0 0 18px rgba(255,79,139,.8); }
+.layout-stage .spin-btn { width: var(--stage-spin-size); height: var(--stage-spin-size); align-self: center; }
+.layout-stage .spin-btn > .spin-icon { width: 80px; height: 80px; }
+
+/* AUTO: hold fill clipped to the circle; gold circle while auto spin runs */
+.layout-stage .auto-btn > .hold-fill { inset: 0 auto auto 0; width: var(--stage-ctl-size); height: var(--stage-ctl-size); border-radius: 50%; }
+.layout-stage .auto-btn.on { background: none; }
+.layout-stage .auto-btn.on::before { background: linear-gradient(#ffe48a, var(--gold)); border-color: #fff6c8; }
+.layout-stage .auto-btn.on .ic { color: #3b2300; }
+.layout-stage .auto-btn.on .lb { color: var(--gold); }
+.layout-stage .auto-ic.pause { width: var(--stage-ctl-size); height: var(--stage-ctl-size); display: flex; align-items: center; justify-content: center; gap: 8px; }
+.layout-stage .auto-ic.pause::before, .layout-stage .auto-ic.pause::after { height: 30px; }
+
+/* Footer: centred balance pill, small status icons at the right */
+.layout-stage .footer { position: relative; height: var(--stage-footer-h); justify-content: center; padding: 0 12px; }
+.layout-stage .bal { padding: 1px 22px; border-radius: 16px; background: rgba(0,0,0,.5); border: 1px solid rgba(245,197,66,.5); align-items: center; }
+.layout-stage .bal-label { font-size: 14px; }
+.layout-stage .bal-value { font-size: 20px; line-height: 1.2; }
+/* The status row spans the footer: round id at the far left, sound / wifi / version at the right, balance pill centred over it */
+.layout-stage .foot-right { position: absolute; left: 10px; right: 10px; top: 0; bottom: 0; gap: 8px; font-size: 12px; pointer-events: none; }
+.layout-stage .foot-right > * { pointer-events: auto; }
+.layout-stage .foot-right .round-id { order: -1; margin-right: auto; }
+.layout-stage .sound-btn { font-size: 18px; padding: 2px; }
+
+/* Toasts sit low in the character stage, clear of the multiplier bar, the pot and the board */
+.layout-stage .toast:not(.center) { top: var(--stage-toast-top); }

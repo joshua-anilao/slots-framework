@@ -7,11 +7,15 @@ The rule from now on: a Cocos drop is only "done" when its rows here are DONE an
 
 | # | Feature | Prototype | Cocos now | Gap |
 |---|---|---|---|---|
-| 3,21 | Spin, card drop, skip (slam) | yes | DONE | Drop-in, anticipation beam, per-scatter ding, tap to snap. Turbo button comes in Drop B. |
-| 4,5 | Ways wins, cascades | yes | DONE | Glow, sway, burst, win amount flies to WIN. |
-| 6 | Multiplier | bar + steps + burst | DONE | Bar for A/B/C, spots for D (spots not yet seen in browser). |
+| 22 | Character stage | yes (rig, reactions, placeholder puppet) | NONE | Prototype only for now. Spine runtime later |
+| 23 | Gold Frame Bank | yes (badge coin, bank pot, coin fly, bar "x2 + 5", debug rows) | NONE | Pending. The prototype is the reference |
+| 1,2,6,9,10,11,13,14 | Portrait layout v2 (stage, banner strip, round controls) | yes | NONE | Cocos keeps the old layout until ported |
+| 7,8,14,21 | Transparent cells, premium specials, start board, balanced marquee (v4) | yes | NONE | Cocos keeps its card tiles until ported |
+| 3,21 | Spin, card drop, skip (slam) | yes | DONE | Drop-in, anticipation beam, per-scatter ding, tap to snap. Turbo button comes in Drop B. Glow parity done (run 20261116-000042). |
+| 4,5 | Ways wins, cascades | yes | DONE | Glow, sway, burst, win amount flies to WIN. Glow parity done (run 20261116-000042). |
+| 6 | Multiplier | bar + steps + burst | DONE | Bar for A/B/C, spots for D (spots not yet seen in browser). Glow parity done (run 20261116-000042). HTML: multiplier reveal (x flies into the prize); Cocos pending. |
 | 7 | Golden to WILD | card flips to back, then WILD | DONE | Seen in browser. |
-| 8 | Scatter and free spins | anticipation, dim and pulse, banner, ladder sweep, FS left counter, retrigger, outro count-up | DONE | Intro, counter, ladder, outro seen in browser; retrigger not yet seen. |
+| 8 | Scatter and free spins | anticipation, dim and pulse, banner, ladder sweep, FS left counter, retrigger, outro count-up | DONE | Intro, counter, ladder, outro seen in browser; retrigger not yet seen. Glow parity done (run 20261116-000042). |
 | 12 | Big / Super / Ultra win | overlay, coins, count-up | PART | Built, coins seen on the free spins outro; Big/Super/Ultra overlay not yet seen. |
 | 9 | Buy Bonus | window, price, quantity | NONE | Debug panel can buy one. |
 | 10 | Auto spin | window, counts, stop conditions, STOP | NONE | |

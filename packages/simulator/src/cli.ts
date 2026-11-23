@@ -7,16 +7,18 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { GameConfig, MultiplierVariant } from '@slots/math-core';
+import { GOLD_BANK_MODES } from '@slots/math-core';
+import type { GameConfig, GoldBankMode, MultiplierVariant } from '@slots/math-core';
 import { simulate } from './simulate';
 import { buildHtmlReport } from './htmlReport';
 import { buildParSheet } from './parSheet';
 import { checkTargets, pct } from './checks';
 
+const USAGE = 'Usage: npm run sim -- games/<id> [--spins N] [--seed N] [--variant A|B|C|D] [--gold-bank off|reset|carry] [--buys N] [--sessions N] [--out dir]';
 const args = process.argv.slice(2);
 const gameDir = args.find(a => !a.startsWith('--'));
 if (!gameDir) {
-  console.error('Usage: npm run sim -- games/<id> [--spins N] [--seed N] [--variant A|B|C|D] [--buys N] [--sessions N] [--out dir]');
+  console.error(USAGE);
   process.exit(2);
 }
 const flag = (name: string, def: number) => {
@@ -28,13 +30,30 @@ const variant = variantIdx >= 0 ? (args[variantIdx + 1] as MultiplierVariant) : 
 const outIdx = args.indexOf('--out');
 
 const config = JSON.parse(readFileSync(join(gameDir, 'game.json'), 'utf8')) as GameConfig;
+
+// --gold-bank is lowercase only (off, reset, carry). A bad value, or reset/carry without a goldBank block, is a usage error.
+const bankIdx = args.indexOf('--gold-bank');
+let goldBank: GoldBankMode | undefined;
+if (bankIdx >= 0) {
+  const raw = args[bankIdx + 1];
+  if (!GOLD_BANK_MODES.includes(raw as GoldBankMode)) {
+    console.error(`Bad --gold-bank value "${raw ?? ''}". ${USAGE}`);
+    process.exit(2);
+  }
+  goldBank = raw as GoldBankMode;
+  if (goldBank !== 'off' && !config.goldBank) {
+    console.error(`--gold-bank ${goldBank} needs a goldBank block in ${join(gameDir, 'game.json')}. ${USAGE}`);
+    process.exit(2);
+  }
+}
 const spins = flag('spins', 1_000_000);
-console.log(`Simulating ${config.name}: ${spins.toLocaleString()} rounds${variant ? `, variant ${variant}` : ''}...`);
+console.log(`Simulating ${config.name}: ${spins.toLocaleString()} rounds${variant ? `, variant ${variant}` : ''}${goldBank ? `, gold bank ${goldBank}` : ''}...`);
 
 const report = simulate(config, {
   spins,
   seed: flag('seed', 20261109),
   variant,
+  goldBank,
   buys: flag('buys', Math.max(10_000, Math.floor(spins / 10))),
   sessions: flag('sessions', 2_000),
   sessionBalance: flag('balance', 1000),
@@ -44,7 +63,9 @@ const report = simulate(config, {
 });
 process.stdout.write('\n');
 
-const outDir = resolve(outIdx >= 0 ? args[outIdx + 1] : join(gameDir, 'reports', report.variant));
+// A bank run never overwrites reports/<variant>: it goes to <variant>-bank-<mode>.
+const defaultFolder = report.goldBank === 'off' ? report.variant : `${report.variant}-bank-${report.goldBank}`;
+const outDir = resolve(outIdx >= 0 ? args[outIdx + 1] : join(gameDir, 'reports', defaultFolder));
 mkdirSync(outDir, { recursive: true });
 writeFileSync(join(outDir, 'report.html'), buildHtmlReport(report));
 writeFileSync(join(outDir, 'par-sheet.csv'), buildParSheet(report));
@@ -55,10 +76,14 @@ writeFileSync(join(outDir, 'summary.json'), JSON.stringify({
   rtp: m.rtp, rtpBase: m.baseWin / m.cost, rtpFreeSpins: m.fsWin / m.cost, rtpCi90: m.ci90,
   hitFrequency: m.hits / m.rounds, freeSpinsOneIn: m.fsTriggers ? m.rounds / m.fsTriggers : null,
   volatilityIndex: m.sd, maxWinX: m.maxWinX, capHits: m.capHits,
-  buyBonusRtp: report.buy?.rtp ?? null, session: report.session, checks,
+  buyBonusRtp: report.buy?.rtp ?? null, session: report.session, goldBank: report.goldBank, bank: m.bank, checks,
 }, null, 2) + '\n');
 
 console.log(`RTP ${pct(m.rtp)} (± ${pct(m.ci90)})  base ${pct(m.baseWin / m.cost)}  free spins ${pct(m.fsWin / m.cost)}`);
 for (const c of checks) console.log(`  ${c.pass ? 'PASS' : 'OFF '}  ${c.name}: ${c.value} (target ${c.target})`);
+const bank = m.bank;
+if (bank) {
+  console.log(`Gold bank (${report.goldBank}): avg bank base ${bank.avgBankBase.toFixed(2)}, free ${bank.avgBankFree.toFixed(2)}, max ${bank.maxBank}, badges banked ${bank.badgesBanked.toLocaleString()}, RTP from bank steps ${pct(bank.rtpFromBankSteps)} (${pct(bank.shareOfRtpFromBankSteps)} of RTP)`);
+}
 console.log(`Report: ${join(outDir, 'report.html')}`);
 process.exit(checks.every(c => c.pass) ? 0 : 1);

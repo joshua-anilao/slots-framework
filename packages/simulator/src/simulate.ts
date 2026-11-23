@@ -1,10 +1,12 @@
-import { applyOverrides, SeededRng, SlotEngine } from '@slots/math-core';
-import type { GameConfig, MultiplierVariant, RoundResult, SpinOutcome } from '@slots/math-core';
+import { applyOverrides, GOLD_BANK_MODES, goldBankMode, goldBankPatch, SeededRng, SlotEngine } from '@slots/math-core';
+import type { ConfigOverrides, GameConfig, GoldBankMode, MultiplierVariant, RoundResult, SpinOutcome } from '@slots/math-core';
 
 export interface SimOptions {
   spins: number;
   seed: number;
   variant?: MultiplierVariant;
+  /** Gold bank for this run only: off, reset or carry. Leave out to use whatever game.json says. */
+  goldBank?: GoldBankMode;
   /** Buy bonus rounds to simulate (0 = skip). */
   buys: number;
   /** Player sessions to simulate (0 = skip). */
@@ -31,6 +33,22 @@ export const WIN_TIERS = [
   { label: 'Ultra Win (50x+)', min: 50 },
 ];
 
+/** Gold Frame Bank numbers from the main rounds. */
+export interface BankStats {
+  /** Mean bank at the end of each base spin. */
+  avgBankBase: number;
+  /** Mean bank at the end of each free spin. */
+  avgBankFree: number;
+  /** Largest end-of-spin bank. */
+  maxBank: number;
+  /** Badges that went into the bank. */
+  badgesBanked: number;
+  /** Win from steps that had a bank above 0, as a share of cost (the RTP they carry). */
+  rtpFromBankSteps: number;
+  /** The same, as a share of the total RTP. */
+  shareOfRtpFromBankSteps: number;
+}
+
 /** Running totals for a set of rounds. */
 export class Accumulator {
   rounds = 0;
@@ -53,6 +71,15 @@ export class Accumulator {
   tiers = new Array<number>(WIN_TIERS.length).fill(0);
   /** key "symbol|count|mode" -> [hits, win] */
   symbolPays = new Map<string, [number, number]>();
+  /** Gold bank totals; stay empty when the bank is off. */
+  private bankOn = false;
+  private bankSumBase = 0;
+  private bankSpinsBase = 0;
+  private bankSumFree = 0;
+  private bankSpinsFree = 0;
+  private bankMax = 0;
+  private bankBadges = 0;
+  private bankStepWin = 0;
 
   add(r: RoundResult): void {
     this.rounds++;
@@ -92,6 +119,35 @@ export class Accumulator {
         this.symbolPays.set(key, e);
       }
     }
+    this.addBank(s, mode);
+  }
+
+  /** Reads the gold bank fields the engine puts on each step. */
+  private addBank(s: SpinOutcome, mode: 'base' | 'free'): void {
+    const last = s.steps[s.steps.length - 1];
+    if (!last || last.bank === undefined) return;
+    this.bankOn = true;
+    for (const step of s.steps) {
+      if ((step.bank ?? 0) > 0) this.bankStepWin += step.stepWin;
+      this.bankBadges += step.banked ? step.banked.length : 0;
+    }
+    const end = last.bank + (last.banked ?? []).reduce((a, b) => a + b.value, 0);
+    if (mode === 'base') { this.bankSumBase += end; this.bankSpinsBase++; } else { this.bankSumFree += end; this.bankSpinsFree++; }
+    if (end > this.bankMax) this.bankMax = end;
+  }
+
+  /** Gold bank numbers, or null when the bank was off. */
+  get bank(): BankStats | null {
+    if (!this.bankOn) return null;
+    const rtpFromBankSteps = this.cost ? this.bankStepWin / this.cost : 0;
+    return {
+      avgBankBase: this.bankSpinsBase ? this.bankSumBase / this.bankSpinsBase : 0,
+      avgBankFree: this.bankSpinsFree ? this.bankSumFree / this.bankSpinsFree : 0,
+      maxBank: this.bankMax,
+      badgesBanked: this.bankBadges,
+      rtpFromBankSteps,
+      shareOfRtpFromBankSteps: this.rtp ? rtpFromBankSteps / this.rtp : 0,
+    };
   }
 
   get rtp(): number { return this.cost ? this.win / this.cost : 0; }
@@ -126,6 +182,8 @@ export interface SimReport {
   durationMs: number;
   createdAt: string;
   config: GameConfig;
+  /** Gold bank mode this run played in. */
+  goldBank: GoldBankMode;
   main: Accumulator;
   buy: Accumulator | null;
   session: SessionStats | null;
@@ -133,7 +191,7 @@ export interface SimReport {
 
 /** Runs the whole simulation and returns the raw numbers. */
 export function simulate(baseConfig: GameConfig, opts: SimOptions): SimReport {
-  const config = opts.variant ? applyOverrides(baseConfig, { multiplier: { variant: opts.variant } }).config : baseConfig;
+  const config = applyRunOverrides(baseConfig, opts);
   const t0 = Date.now();
   const engine = new SlotEngine(config, new SeededRng(opts.seed));
   const bet = config.bet.levels[config.bet.defaultIndex];
@@ -163,10 +221,28 @@ export function simulate(baseConfig: GameConfig, opts: SimOptions): SimReport {
     durationMs: Date.now() - t0,
     createdAt: new Date().toISOString(),
     config,
+    goldBank: goldBankMode(config),
     main,
     buy,
     session,
   };
+}
+
+/** Applies the variant and gold bank flags for this run only (game.json is never written). */
+function applyRunOverrides(baseConfig: GameConfig, opts: SimOptions): GameConfig {
+  const patches: ConfigOverrides[] = [];
+  if (opts.variant) patches.push({ multiplier: { variant: opts.variant } });
+  if (opts.goldBank !== undefined) {
+    if (!GOLD_BANK_MODES.includes(opts.goldBank)) throw new Error(`Unknown gold bank mode "${String(opts.goldBank)}" (use off, reset or carry)`);
+    if (!baseConfig.goldBank) {
+      if (opts.goldBank !== 'off') throw new Error('This game has no goldBank settings in game.json');
+    } else {
+      patches.push(goldBankPatch(opts.goldBank));
+    }
+  }
+  let config = baseConfig;
+  for (const p of patches) config = applyOverrides(config, p).config;
+  return config;
 }
 
 /** Plays many short sessions to show how a player's balance behaves. */

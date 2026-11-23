@@ -15,6 +15,8 @@ One line per term. Add a row when a brief uses a new word.
 | Multiplier ladder | Win multiplier that steps up each cascade. Variant A: x1 x2 x3 x5, free spins x2 x4 x6 x10 |
 | Variant (A–D) | Alternative multiplier rules switchable in debug; each has its own pay scale and buy price |
 | Golden card | A card on reels 2–4 that turns into WILD after it wins |
+| Gold bank | Feature 23. When a golden card with a badge wins, its badge value goes into the bank; from the next cascade step the multiplier is the ladder multiplier plus the bank. Resets every spin, or keeps growing through free spins (`carryInFree`). Off by default |
+| Badge | A value (x2, x5, ...) some golden cards carry for the gold bank. Rolled when the golden card lands; kept while it falls; banked when the card wins |
 | Scatter (SC) | Pays free spins when 3+ land anywhere |
 | Free spins (FS) | Bonus round; retrigger adds spins |
 | Buy bonus | Pay 50x bet to start free spins at once; has its own RTP |
@@ -34,7 +36,7 @@ One line per term. Add a row when a brief uses a new word.
 | Framework / game | Framework = reusable by any game; game = only this game. Framework never imports game |
 | Prefab | Reusable view part in Cocos (or its HTML equivalent) |
 | Recipe | `recipe.json`: which feature modules a game uses |
-| Feature number | Permanent number of a feature (1–21 so far) used on layout sketches |
+| Feature number | Permanent number of a feature (1–23 so far) used on layout sketches |
 | Pace / timing set | Animation timings per speed: normal, turbo, super turbo |
 | Win tier | Big (10x), Super (25x), Ultra (50x) celebration thresholds |
 | Parity | Whether the Cocos client matches the HTML prototype (`docs/COCOS_PARITY.md`) |

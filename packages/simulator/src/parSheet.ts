@@ -30,6 +30,17 @@ export function buildParSheet(r: SimReport): string {
     add('Buy bonus RTP', r.buy.rtp);
     add('Buy bonus average win (x bet)', r.buy.win / r.buy.rounds / betOf(r));
   }
+  if (m.bank) {
+    const b = m.bank;
+    add();
+    add('GOLD BANK', r.goldBank);
+    add('Average bank, end of base spin', b.avgBankBase);
+    add('Average bank, end of free spin', b.avgBankFree);
+    add('Largest bank seen', b.maxBank);
+    add('Badges banked', b.badgesBanked);
+    add('RTP from steps with a bank', b.rtpFromBankSteps);
+    add('Share of RTP from steps with a bank', b.shareOfRtpFromBankSteps);
+  }
   add();
   add('WIN DISTRIBUTION', 'Rounds', 'Probability', 'RTP contribution');
   BUCKETS.forEach((b, i) => add(b.label, m.buckets[i], m.buckets[i] / m.rounds, m.bucketWin[i] / m.cost));

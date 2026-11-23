@@ -1,12 +1,15 @@
 import { createLocalGame } from '@slots/game-logic';
 import { audio } from './framework/core/audio';
 import type { GameConfig } from '@slots/math-core';
+import { goldBankMode } from '@slots/math-core';
 import gameJson from '../../games/game-001/game.json';
 import { el, fitText } from './framework/core/dom';
 import { DebugPanel } from './framework/debug/debugPanel';
 import { STRINGS } from './framework/strings';
 import { PlaceholderTheme } from './game/theme/placeholderTheme';
 import type { Theme } from './framework/theme/theme';
+import { characterConfigWith, CharacterReactionController } from './framework/character/characterReactions';
+import { CharacterStage } from './framework/views/characterStage';
 import { FxLayer } from './framework/views/fx';
 import { HtmlRoundPresenter } from './framework/cascade/htmlRoundPresenter';
 import { HudView } from './framework/views/hudView';
@@ -22,15 +25,27 @@ import type { SpinResponse } from '@slots/game-logic';
 import { LoadingScreen } from './framework/windows/loadingScreen';
 import { Modal } from './framework/windows/modal';
 import './styles.css';
+import './layout-stage.css';
 
 const config = gameJson as unknown as GameConfig;
 const params = new URLSearchParams(location.search);
 const debug = params.has('debug') || (window as unknown as { __PROTO_DEBUG?: boolean }).__PROTO_DEBUG === true;
 const seedParam = params.get('seed');
 
+/**
+ * Screen layouts, picked with ?layout=<name> (Josh, 2026-11-22: keep the previous layout available).
+ * classic: the original layout (marquee bar, logo header, multiplier, grid, WIN box, controls, footer).
+ * stage: reference portrait layout with the character stage on top (feature 22).
+ */
+const LAYOUTS = ['classic', 'stage'] as const;
+type Layout = typeof LAYOUTS[number];
+const DEFAULT_LAYOUT: Layout = 'classic';
+const layoutParam = params.get('layout');
+const layout: Layout = (LAYOUTS as readonly string[]).includes(layoutParam ?? '') ? layoutParam as Layout : DEFAULT_LAYOUT;
+
 // --- Stage: 720x1280 design, scaled to fit (portrait first; desktop shows it centred) ---
 const stage = document.getElementById('stage')!;
-const screen = el('div.screen');
+const screen = el(`div.screen.layout-${layout}`);
 const backdrop = el('div.backdrop');
 stage.append(backdrop, screen);
 function fit(): void {
@@ -39,12 +54,23 @@ function fit(): void {
 }
 window.addEventListener('resize', fit);
 fit();
+// Safety net for browsers without overflow: clip: the frame must never scroll sideways (D5).
+for (const n of [stage, screen]) n.addEventListener('scroll', () => { n.scrollLeft = 0; n.scrollTop = 0; });
 
 // --- Views (V) wired to shared Models + Controllers (M + C) ---
 const theme: Theme = new PlaceholderTheme();
 if (theme.backdrop) { backdrop.style.backgroundImage = `url(${theme.backdrop})`; backdrop.classList.add('has-image'); }
 const normalIds = config.symbols.filter(s => s.kind === 'normal').map(s => s.id);
-const reels = new ReelsView(theme, config.grid.reels, config.grid.rows, normalIds, config.freeSpins.scatterSymbol);
+/** Cell size per layout, in design px (classic keeps 128x150; stage is a little bigger to fill the reference board). Rows in docs/TUNING.md. */
+const CELL_SIZE: Record<Layout, { w: number; h: number }> = { classic: { w: 128, h: 150 }, stage: { w: 130, h: 158 } };
+// The board shown before the first spin: 1 scatter, and 1 wild on a golden reel, each on its own reel.
+const wildId = config.symbols.find(s => s.kind === 'wild')?.id;
+const startFeature = [
+  { symbol: config.freeSpins.scatterSymbol },
+  ...(wildId ? [{ symbol: wildId, reels: config.golden.reels }] : []),
+];
+const reels = new ReelsView(theme, config.grid.reels, config.grid.rows, normalIds, config.freeSpins.scatterSymbol,
+  { cell: CELL_SIZE[layout], startFeature });
 const overlays = new Overlays();
 let presenter!: HtmlRoundPresenter;
 // Demo balance and an unfinished round survive a reload on this device (a server does this later).
@@ -96,11 +122,42 @@ presenter = new HtmlRoundPresenter(reels, hud, overlays, fx, () => game.services
 const reelFrame = el('div.reel-frame', {}, [reels.root]);
 const winner = new WinnerNotice(game.services.winFeed,
   () => !document.body.classList.contains('fs') && models.spin.phase.value !== 'presenting' && !document.querySelector('.overlays .banner, .overlays .bigwin'), debug);
-const multWrap = el('div.mult-wrap', {}, [hud.mult.root, winner.root]);
-screen.append(hud.top, hud.header, multWrap, reelFrame, hud.win.root, hud.controls, hud.footer, fx.root, overlays.root);
-// A long game name shrinks to stay clear of the Buy Bonus button.
+const multWrap = el('div.mult-wrap', {}, [hud.mult.root, winner.root, hud.pot.root]);
+
+/** Max logo width per layout, so a long game name shrinks to stay clear of the Buy Bonus button. */
+const LOGO_MAX_WIDTH: Record<Layout, number> = { classic: 470, stage: 400 };
+const characterConfig = characterConfigWith(theme.characterConfig);
+let characterStage: CharacterStage | null = null;
+let character: CharacterReactionController | null = null;
+/** The row that holds the WIN box: the WIN box itself (classic) or the banner strip (stage). */
+let winRow: HTMLElement = hud.win.root;
+
+if (layout === 'stage') {
+  // Reference portrait layout (the HUD parts are only moved, not rebuilt): character stage with the logo on top,
+  // multiplier bar, grid, banner strip (marquee or WIN, plus the Buy Bonus badge), round controls, footer.
+  const stageView = new CharacterStage(theme.character, hud.header);
+  characterStage = stageView;
+  const strip = el('div.banner-strip', {}, [hud.top, hud.win.root, hud.buyBtn]);
+  winRow = strip;
+  screen.append(stageView.root, multWrap, reelFrame, strip, hud.controls, hud.footer, fx.root, overlays.root);
+
+  // The character reacts to decided results, only at the cues the presenter sends after things have shown.
+  const reactions = new CharacterReactionController(stageView.rig, bus, characterConfig, () => game.services.config.config.value);
+  character = reactions;
+  reactions.start();
+  /** The banner strip shows the marquee; once a round has a win, the WIN pill fades in over it. */
+  const showWinPill = (on: boolean) => strip.classList.toggle('show-win', on);
+  presenter.onCue = cue => {
+    reactions.onCue(cue);
+    if ((cue.kind === 'baseLanded' && cue.result.totalWin > 0) || cue.kind === 'freeSpinsStart') showWinPill(true);
+  };
+  bus.on('spinStarted', () => showWinPill(false));
+} else {
+  // Classic layout: exactly the previous one.
+  screen.append(hud.top, hud.header, multWrap, reelFrame, hud.win.root, hud.controls, hud.footer, fx.root, overlays.root);
+}
 const logoMain = hud.header.querySelector<HTMLElement>('.logo-main');
-if (logoMain) fitText(logoMain, 470);
+if (logoMain) fitText(logoMain, LOGO_MAX_WIDTH[layout]);
 
 function spinOrSkip(): void {
   if (Modal.isOpen) return;
@@ -157,6 +214,8 @@ controllers.speed.set(loadSettings().speed);
 
 bus.on('spinFailed', e => overlays.toast(e.message, 3000));
 game.services.config.config.subscribe(() => hud.mult.mode(document.body.classList.contains('fs')));
+// With the gold bank on, the bar leaves room for the pot at the right end.
+game.services.config.config.subscribe(c => { multWrap.classList.toggle('has-bank', goldBankMode(c) !== 'off'); });
 
 // Sound needs a first tap (browser rule); every button press clicks within 50 ms (design guide).
 const touchLayer = el('div.touch-layer');
@@ -178,7 +237,7 @@ window.addEventListener('keydown', e => {
 });
 
 if (debug) {
-  debugPanel = new DebugPanel(screen, game, reels);
+  debugPanel = new DebugPanel(screen, game, reels, character ?? undefined);
   debugPanel.mount();
   (window as unknown as { __game: unknown }).__game = game;
 }
@@ -192,11 +251,20 @@ async function playIntro(): Promise<void> {
   const fade = (n: Element, from: string, delay: number, ms = 360) => n.animate(
     [{ opacity: 0, transform: from }, { opacity: 1, transform: 'none' }],
     { duration: ms, delay, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
-  fade(hud.top, 'translateY(-30px)', 0);
+  if (characterStage) {
+    // Stage layout: the stage drops in first, then the character rises in over introMs.
+    const stageView = characterStage;
+    fade(stageView.root, 'translateY(-40px)', 0);
+    const actor = stageView.rig.root;
+    actor.style.opacity = '0';
+    window.setTimeout(() => { actor.style.opacity = ''; void stageView.rig.enter(characterConfig.introMs); }, 300);
+  } else {
+    fade(hud.top, 'translateY(-30px)', 0);
+  }
   fade(hud.header, 'translateY(-50px)', 80);
   fade(multWrap, 'translateY(-20px)', 180);
   fade(reelFrame, 'none', 120, 420);
-  fade(hud.win.root, 'translateY(20px)', 260);
+  fade(winRow, 'translateY(20px)', 260);
   fade(hud.controls, 'translateY(70px)', 320, 420);
   fade(hud.footer, 'translateY(30px)', 380);
   audio.play('fsIntro');

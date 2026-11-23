@@ -110,6 +110,29 @@ export interface MathTargets {
   freeSpinsOneIn?: [number, number];
 }
 
+/** One badge size (x, at least 2) and how common it is (weight above 0). */
+export interface BadgeValue { v: number; w: number }
+
+/** Money tuning for one bank mode. payScale multiplies the variant pay scale; buyPriceX replaces the buy price. */
+export interface GoldBankTuning { payScale?: number; buyPriceX?: number }
+
+/**
+ * Gold Frame Bank (feature 23): golden cards may carry a value badge.
+ * A winning badge goes into the bank, and the bank is added to the step multiplier from the next step.
+ */
+export interface GoldBankConfig {
+  enabled: boolean;
+  /** Chance (0 to 1) that a golden card lands with a badge, base game and free spins. Rolled only on golden cells. */
+  badgeChanceBase: number;
+  badgeChanceFree: number;
+  valuesBase: BadgeValue[];
+  valuesFree: BadgeValue[];
+  /** true = the bank keeps growing through the whole free spins feature; false = it resets every spin. */
+  carryInFree: boolean;
+  /** Pay scale and buy price per mode, so reset and carry each land on the RTP target. */
+  tuning?: { reset?: GoldBankTuning; carry?: GoldBankTuning };
+}
+
 export interface GameConfig {
   id: string;
   name: string;
@@ -125,6 +148,8 @@ export interface GameConfig {
   reelSets: ReelSetConfig;
   golden: GoldenConfig;
   multiplier: MultiplierConfig;
+  /** Gold Frame Bank. Optional; missing or enabled: false = today's behaviour. */
+  goldBank?: GoldBankConfig;
   freeSpins: FreeSpinsConfig;
   buyBonus: BuyBonusConfig;
   /** Max win per round as a multiple of the bet. The engine stops paying at this cap. */

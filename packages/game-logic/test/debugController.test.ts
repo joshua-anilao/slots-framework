@@ -70,4 +70,55 @@ describe('DebugController', () => {
     dbg.resetStats();
     expect(dbg.stats.value.rounds).toBe(0);
   });
+
+  describe('gold bank', () => {
+    it('switches the bank mode for this session and clearOverrides goes back to off', () => {
+      const { game, dbg } = make();
+      expect(dbg.goldBankMode()).toBe('off');
+      expect(dbg.setGoldBankMode('reset')).toBe(true);
+      expect(dbg.goldBankMode()).toBe('reset');
+      expect(dbg.setGoldBankMode('carry')).toBe(true);
+      expect(dbg.goldBankMode()).toBe('carry');
+      expect(game.services.config.base.goldBank?.enabled).toBe(false);
+      expect(dbg.setGoldBankMode('off')).toBe(true);
+      expect(dbg.goldBankMode()).toBe('off');
+      dbg.setGoldBankMode('carry');
+      dbg.clearOverrides();
+      expect(dbg.goldBankMode()).toBe('off');
+    });
+
+    it('refuses the bank when the game has no gold bank settings', () => {
+      const noBlock = structuredClone(config);
+      delete noBlock.goldBank;
+      const game = createLocalGame({ config: noBlock, seed: 3, debug: true });
+      const dbg = new DebugController(game);
+      expect(dbg.setGoldBankMode('reset')).toBe(false);
+      expect(dbg.message.value).toEqual({ text: 'This game has no gold bank settings', bad: true });
+      expect(dbg.setForceBadges(true)).toBe(false);
+      expect(dbg.goldBankMode()).toBe('off');
+    });
+
+    it('force badges sets both chances to 1 and off restores the game.json values', () => {
+      const { game, dbg } = make();
+      const base = game.services.config.base.goldBank!;
+      expect(dbg.setForceBadges(true)).toBe(true);
+      expect(dbg.config.value.goldBank?.badgeChanceBase).toBe(1);
+      expect(dbg.config.value.goldBank?.badgeChanceFree).toBe(1);
+      expect(dbg.setForceBadges(false)).toBe(true);
+      expect(dbg.config.value.goldBank?.badgeChanceBase).toBe(base.badgeChanceBase);
+      expect(dbg.config.value.goldBank?.badgeChanceFree).toBe(base.badgeChanceFree);
+      expect(game.services.config.base.goldBank?.badgeChanceBase).toBe(base.badgeChanceBase);
+    });
+
+    it('the buy price edits the bank mode price while the bank is on', () => {
+      const { game, dbg } = make();
+      dbg.setGoldBankMode('carry');
+      dbg.set('buyPrice', 99);
+      expect(dbg.get('buyPrice')).toBe(99);
+      expect(dbg.config.value.goldBank?.tuning?.carry?.buyPriceX).toBe(99);
+      expect(dbg.config.value.buyBonus.priceXByVariant).toEqual(game.services.config.base.buyBonus.priceXByVariant);
+      dbg.setGoldBankMode('off');
+      expect(dbg.get('buyPrice')).toBe(50);
+    });
+  });
 });

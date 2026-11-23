@@ -7,7 +7,10 @@ npm run sim -- games/game-001                         # 1M rounds, variant from 
 npm run sim -- games/game-001 --spins 10000000        # final check
 npm run sim -- games/game-001 --variant B             # try another multiplier variant
 npm run sim -- games/game-001 --seed 7 --buys 200000 --sessions 5000
+npm run sim -- games/game-001 --gold-bank reset       # gold bank on for this run only (off | reset | carry)
 ```
+
+With the gold bank on, the report goes to `reports/<variant>-bank-reset` or `-bank-carry` and gets a "Gold bank" section; `summary.json` gets `goldBank` and `bank`. `game.json` is never written.
 
 Writes to `games/<id>/reports/<variant>/`:
 

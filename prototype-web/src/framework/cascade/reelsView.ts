@@ -1,11 +1,21 @@
-import type { Grid, Pos } from '@slots/math-core';
+import type { Cell, Grid, Pos } from '@slots/math-core';
 import { el } from '../core/dom';
 import type { Pace, SpinStyle } from '../core/pace';
 import type { Theme } from '../theme/theme';
 
-export const CELL_W = 128;
-export const CELL_H = 150;
+/** Default cell size in design px (classic layout). A layout can pass its own through ReelsOptions.cell. */
+export const DEFAULT_CELL = { w: 128, h: 150 };
 const REEL_GAP = 6;
+
+/** A symbol the start board shows once; `reels` limits where it may sit (default: any reel). */
+export interface StartFeature { symbol: string; reels?: number[] }
+
+export interface ReelsOptions {
+  /** Cell size in design px. Default 128x150. */
+  cell?: { w: number; h: number };
+  /** The board shown before the first spin: one of each of these, each on its own reel, the rest normal symbols. */
+  startFeature?: StartFeature[];
+}
 
 /** Where a cell ends up after the cascade drop: it falls by the number of removed cells below it. */
 export function rowAfterDrop(p: Pos, removed: Pos[]): number {
@@ -25,6 +35,9 @@ export class ReelsView {
   private timers: number[] = [];
   private slammed = false;
   private grid: Grid;
+  private readonly cellW: number;
+  private readonly cellH: number;
+  private readonly startFeature: StartFeature[];
   /** "drop" = cards fall out and in (card cascade games); "scroll" = spinning strips. */
   spinStyle: SpinStyle = 'drop';
   /** Sound hooks: a reel landed (with how many scatters have landed so far), anticipation started. */
@@ -32,23 +45,40 @@ export class ReelsView {
   onAnticipate: () => void = () => {};
 
   constructor(private theme: Theme, private readonly reelCount: number, private readonly rows: number,
-    private readonly blurPool: string[], private readonly scatterId: string) {
+    private readonly blurPool: string[], private readonly scatterId: string, options: ReelsOptions = {}) {
+    const cell = options.cell ?? DEFAULT_CELL;
+    this.cellW = cell.w;
+    this.cellH = cell.h;
+    this.startFeature = options.startFeature ?? [];
     this.root = el('div.reels');
+    // The CSS reads the cell size from these two variables (reel width, symbol box, art size).
+    this.root.style.setProperty('--cell-w', `${cell.w}px`);
+    this.root.style.setProperty('--cell-h', `${cell.h}px`);
     for (let r = 0; r < reelCount; r++) {
       const col = el('div.reel');
-      col.style.height = `${rows * CELL_H}px`;
+      col.style.height = `${rows * cell.h}px`;
       this.cols.push(col);
       this.root.append(col);
     }
     this.spotLayer = el('div.spots');
     this.root.append(this.spotLayer);
-    this.grid = this.randomGrid();
+    this.grid = this.startGrid();
     this.setGrid(this.grid);
   }
 
   setTheme(theme: Theme): void { this.theme = theme; this.setGrid(this.grid); }
 
   cellEl(p: Pos): HTMLElement { return this.cells[p.reel][p.row]; }
+
+  /** The gold bank coin on a cell, or null. */
+  badgeEl(p: Pos): HTMLElement | null { return this.cells[p.reel][p.row].querySelector<HTMLElement>('.badge-coin'); }
+
+  /** Takes the coin off its card (the card keeps playing its animation). Returns it, or null if there was none. */
+  takeBadge(p: Pos): HTMLElement | null {
+    const coin = this.badgeEl(p);
+    coin?.remove();
+    return coin;
+  }
 
   /**
    * Game intro after Continue: cards flip in one at a time, top to bottom in a column,
@@ -76,7 +106,7 @@ export class ReelsView {
     const isBack = new Set(backs.map(p => `${p.reel}:${p.row}`));
     this.cells = grid.map((col, r) => {
       const strip = el('div.strip');
-      const nodes = col.map((cell, row) => this.place(isBack.has(`${r}:${row}`) ? this.theme.cardBack() : this.theme.symbol(cell), row));
+      const nodes = col.map((cell, row) => this.place(isBack.has(`${r}:${row}`) ? this.theme.cardBack() : this.face(cell), row));
       strip.append(...nodes);
       this.cols[r].replaceChildren(strip);
       return nodes;
@@ -88,10 +118,16 @@ export class ReelsView {
     this.clearMarks();
     this.slammed = false;
     this.running = [];
-    if (this.spinStyle === 'drop') await this.spinDrop(grid, pace);
-    else await this.spinScroll(grid, pace);
-    this.endSpin();
-    this.setGrid(grid);
+    // Columns clip while cards move, so nothing shows above or below the frame; at rest they do not (premium specials stand taller than a cell).
+    this.root.classList.add('clip');
+    try {
+      if (this.spinStyle === 'drop') await this.spinDrop(grid, pace);
+      else await this.spinScroll(grid, pace);
+      this.endSpin();
+      this.setGrid(grid);
+    } finally {
+      this.root.classList.remove('clip');
+    }
   }
 
   /** Tap to stop: everything lands now. */
@@ -165,7 +201,7 @@ export class ReelsView {
   async pop(removed: Pos[], pace: Pace): Promise<void> {
     const d = pace.t.pop;
     for (const p of removed) this.cells[p.reel][p.row].classList.remove('win');
-    for (const c of this.cols) c.classList.remove('has-win'); // clip again before new cards fall in from above
+    for (const c of this.cols) c.classList.remove('has-win'); // drop() clips the columns before new cards fall in from above
     const anims = removed.map(p => this.cells[p.reel][p.row].animate(
       // Burst without any scaling (Josh: no squash and stretch): a hard shake, flash, then fade.
       [{ transform: 'translate(0,0) rotate(0)', opacity: 1, filter: 'brightness(1)' },
@@ -182,6 +218,7 @@ export class ReelsView {
   async drop(next: Grid, removed: Pos[], pace: Pace, backs: Pos[] = []): Promise<void> {
     const d = pace.t.drop;
     const anims: Promise<unknown>[] = [];
+    this.root.classList.add('clip');
     this.setGrid(next, backs);
     this.root.classList.remove('dimmed');
     for (let r = 0; r < this.reelCount; r++) {
@@ -191,7 +228,7 @@ export class ReelsView {
       const n = gone.size;
       for (let row = 0; row < this.rows; row++) {
         const fromRow = row < n ? row - n : keptFrom[row - n];
-        const dy = (fromRow - row) * CELL_H;
+        const dy = (fromRow - row) * this.cellH;
         if (dy === 0) continue;
         anims.push(this.cells[r][row].animate(
           [{ transform: `translateY(${dy}px)` }, { transform: 'translateY(6px)', offset: 0.85 }, { transform: 'translateY(0)' }],
@@ -199,6 +236,7 @@ export class ReelsView {
       }
     }
     await Promise.race([Promise.all(anims), pace.wait(d * 1.4 + 50)]);
+    this.root.classList.remove('clip');
   }
 
   /** Scatters pulse before free spins start. */
@@ -223,8 +261,8 @@ export class ReelsView {
     spots.forEach((col, r) => col.forEach((v, row) => {
       if (v > 1) {
         const b = el('div.spot', { text: `x${v}` });
-        b.style.left = `${r * (CELL_W + REEL_GAP) + CELL_W - 46}px`;
-        b.style.top = `${row * CELL_H + 6}px`;
+        b.style.left = `${r * (this.cellW + REEL_GAP) + this.cellW - 46}px`;
+        b.style.top = `${row * this.cellH + 6}px`;
         this.spotLayer.append(b);
       }
     }));
@@ -234,7 +272,7 @@ export class ReelsView {
   private async spinDrop(grid: Grid, pace: Pace): Promise<void> {
     const t = pace.t;
     const out = this.cells.flat().map((n, i) => n.animate(
-      [{ transform: 'translateY(0)' }, { transform: `translateY(${this.rows * CELL_H + 60}px)` }],
+      [{ transform: 'translateY(0)' }, { transform: `translateY(${this.rows * this.cellH + 60}px)` }],
       { duration: t.clear, delay: (i % this.rows) * 0 + Math.floor(i / this.rows) * 15, easing: 'cubic-bezier(.5,0,1,1)', fill: 'forwards' }));
     this.running = out;
     await Promise.all(out.map(a => a.finished.catch(() => {})));
@@ -268,7 +306,7 @@ export class ReelsView {
       for (let row = this.rows - 1; row >= 0; row--) {
         const k = this.rows - 1 - row;
         const a = this.cells[r][row].animate([
-          { transform: `translateY(${-(row + 1) * CELL_H - 30}px)` },
+          { transform: `translateY(${-(row + 1) * this.cellH - 30}px)` },
           { transform: 'translateY(8px)', offset: 0.82 },
           { transform: 'translateY(0)' },
         ], { duration: this.slammed ? 0 : fall, delay: this.slammed ? 0 : start + k * stagger, easing: 'cubic-bezier(.45,0,.75,1)', fill: 'backwards' });
@@ -311,13 +349,13 @@ export class ReelsView {
     const col = this.cols[r];
     const fillers = Math.max(4, Math.round(duration / 45));
     const strip = el('div.strip');
-    target.forEach((cell, row) => strip.append(this.place(this.theme.symbol(cell), row)));
+    target.forEach((cell, row) => strip.append(this.place(this.face(cell), row)));
     for (let k = 0; k < fillers; k++) {
       strip.append(this.place(this.theme.blurSymbol(this.blurPool[(Math.random() * this.blurPool.length) | 0]), this.rows + k));
     }
     this.cells[r].forEach((n, row) => { n.classList.remove('win', 'dim'); strip.append(this.place(n, this.rows + fillers + row)); });
     col.replaceChildren(strip);
-    const start = -(this.rows + fillers) * CELL_H;
+    const start = -(this.rows + fillers) * this.cellH;
     const anim = strip.animate([
       { transform: `translateY(${start}px)` },
       { transform: `translateY(${start - 18}px)`, offset: 0.06 },
@@ -341,13 +379,36 @@ export class ReelsView {
     for (const c of this.cols) c.classList.remove('beam');
   }
 
-  private place(node: HTMLElement, row: number): HTMLElement {
-    node.style.top = `${row * CELL_H}px`;
+  /** A symbol, with a gold bank coin in its corner when the cell has a badge. */
+  private face(cell: Cell): HTMLElement {
+    const node = this.theme.symbol(cell);
+    if (cell.b) node.append(el('span.badge-coin', { text: `+${cell.b}` }));
     return node;
   }
 
-  private randomGrid(): Grid {
-    return Array.from({ length: this.reelCount }, () => Array.from({ length: this.rows },
+  private place(node: HTMLElement, row: number): HTMLElement {
+    node.style.top = `${row * this.cellH}px`;
+    return node;
+  }
+
+  /**
+   * The board shown before the first spin: normal symbols, plus one of each start feature (e.g. 1 scatter, 1 wild),
+   * every feature on its own reel. Drawn with setGrid only, so it triggers no sound, reaction or anticipation.
+   */
+  private startGrid(): Grid {
+    const grid: Grid = Array.from({ length: this.reelCount }, () => Array.from({ length: this.rows },
       () => ({ s: this.blurPool[(Math.random() * this.blurPool.length) | 0], g: false })));
+    const allReels = Array.from({ length: this.reelCount }, (_, r) => r);
+    const taken = new Set<number>();
+    // The most restricted symbol picks first, so it is never left without a free reel.
+    const order = [...this.startFeature].sort((a, b) => (a.reels ?? allReels).length - (b.reels ?? allReels).length);
+    for (const f of order) {
+      const free = (f.reels ?? allReels).filter(r => r >= 0 && r < this.reelCount && !taken.has(r));
+      if (!free.length) continue;
+      const reel = free[(Math.random() * free.length) | 0];
+      taken.add(reel);
+      grid[reel][(Math.random() * this.rows) | 0] = { s: f.symbol, g: false };
+    }
+    return grid;
   }
 }

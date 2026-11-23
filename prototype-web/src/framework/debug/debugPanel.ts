@@ -1,6 +1,10 @@
+import { DebugController } from '@slots/game-logic';
 import type { LocalGame } from '@slots/game-logic';
-import { buyPriceX, payScale } from '@slots/math-core';
-import type { ConfigOverrides, GameConfig } from '@slots/math-core';
+import { buyPriceX, GOLD_BANK_MODES, payScale } from '@slots/math-core';
+import type { ConfigOverrides, GameConfig, GoldBankMode } from '@slots/math-core';
+import { CHARACTER_STATES } from '../character/characterRig';
+import type { CharacterState } from '../character/characterRig';
+import type { CharacterReactionController } from '../character/characterReactions';
 import { el } from '../core/dom';
 import { money, STRINGS } from '../strings';
 
@@ -15,11 +19,21 @@ export class DebugPanel {
   private stats = { rounds: 0, cost: 0, win: 0, fs: 0, biggest: 0 };
   private statsEl = el('pre.dbg-stats');
   private msg = el('div.dbg-msg');
+  /** Shared logic with the Cocos panel; the gold bank and buy price rows go through it. */
+  private readonly ctrl: DebugController;
 
-  constructor(private host: HTMLElement, private game: LocalGame, private readonly view: { spinStyle: 'drop' | 'scroll' }) {
+  constructor(
+    private host: HTMLElement,
+    private game: LocalGame,
+    private readonly view: { spinStyle: 'drop' | 'scroll' },
+    /** Optional: adds a "Character" row that forces each state. */
+    private readonly character?: Pick<CharacterReactionController, 'force'>,
+  ) {
     this.banner = el('div.debug-banner', { text: STRINGS.debugActive });
     this.button = el('button.dbg-btn', { text: 'DBG', onclick: () => this.toggle() });
     this.panel = el('div.dbg-panel');
+    this.ctrl = new DebugController(game);
+    this.ctrl.message.subscribe(m => { if (m.text) this.say(m.text, m.bad); });
     this.build();
     game.bus.on('debugOverridesChanged', e => { this.banner.classList.toggle('show', e.active); });
     game.bus.on('spinResolved', e => {
@@ -76,14 +90,16 @@ export class DebugPanel {
       num('Golden chance (base)', () => cur().golden.chanceBase, v => ({ golden: { chanceBase: v } })),
       num('Golden chance (free)', () => cur().golden.chanceFree, v => ({ golden: { chanceFree: v } })),
       num('Free spins awarded', () => cur().freeSpins.spins, v => ({ freeSpins: { spins: v } }), '1'),
-      num('Buy price (x bet)', () => buyPriceX(cur()), v => ({ buyBonus: { priceXByVariant: { [cur().multiplier.variant]: v } } })),
+      this.buyPriceRow(cur),
       num('Max win (x bet)', () => cur().maxWinX, v => ({ maxWinX: v }), '1'),
+      ...this.goldBankRows(),
       el('div.dbg-btns', {}, [
         el('button', { text: 'Reset to game.json', onclick: () => { cfgSvc.clearOverrides(); this.say('Overrides cleared'); } }),
         el('button', { text: 'Copy overrides JSON', onclick: () => this.copy(cfgSvc.exportOverrides()) }),
       ]),
       el('div.dbg-sec', { text: 'Presentation' }),
       el('label.dbg-row', {}, [el('span', { text: 'Spin style' }), spinStyle]),
+      ...this.characterRow(),
       el('div.dbg-sec', { text: 'Force next round' }),
       el('div.dbg-btns', {}, [
         el('button', { text: 'Trigger free spins', onclick: () => { this.game.controllers.spin.forceNext({ triggerFreeSpins: true }); this.say('Next spin triggers free spins'); } }),
@@ -103,6 +119,42 @@ export class DebugPanel {
       el('button', { text: 'Reset stats', onclick: () => { this.stats = { rounds: 0, cost: 0, win: 0, fs: 0, biggest: 0 }; this.renderStats(); } }),
       this.msg,
     );
+  }
+
+  /** Buy price goes through the controller, so with the gold bank on it edits that mode's own price. */
+  private buyPriceRow(cur: () => GameConfig): HTMLElement {
+    const input = el('input', { type: 'number', step: 'any' }) as HTMLInputElement;
+    const show = (): void => { input.value = String(buyPriceX(cur())); };
+    this.game.services.config.config.subscribe(show);
+    input.addEventListener('change', () => { this.ctrl.set('buyPrice', Number(input.value)); show(); });
+    return el('label.dbg-row', {}, [el('span', { text: 'Buy price (x bet)' }), input]);
+  }
+
+  /** "Gold Frame Bank" select (off / reset / carry) and the "Force badge" checkbox. Disabled when the game has no gold bank settings. */
+  private goldBankRows(): HTMLElement[] {
+    const has = !!this.game.services.config.base.goldBank;
+    const mode = el('select', {}, GOLD_BANK_MODES.map(m => el('option', { value: m, text: m }))) as HTMLSelectElement;
+    const force = el('input', { type: 'checkbox' }) as HTMLInputElement;
+    mode.disabled = force.disabled = !has;
+    mode.addEventListener('change', () => { this.ctrl.setGoldBankMode(mode.value as GoldBankMode); });
+    force.addEventListener('change', () => { this.ctrl.setForceBadges(force.checked); });
+    this.game.services.config.config.subscribe(c => {
+      mode.value = this.ctrl.goldBankMode();
+      force.checked = !!c.goldBank && c.goldBank.badgeChanceBase === 1 && c.goldBank.badgeChanceFree === 1;
+    });
+    const rows = [el('label.dbg-row', {}, [el('span', { text: 'Gold Frame Bank' }), mode]),
+      el('label.dbg-row', {}, [el('span', { text: 'Force badge' }), force])];
+    if (!has) rows.push(el('div.dbg-note', { text: 'This game has no gold bank settings' }));
+    return rows;
+  }
+
+  /** "Character" row: pick a state and Play it. "idle" resets from any state. */
+  private characterRow(): HTMLElement[] {
+    const character = this.character;
+    if (!character) return [];
+    const pick = el('select', {}, CHARACTER_STATES.map(s => el('option', { value: s, text: s }))) as HTMLSelectElement;
+    return [el('label.dbg-row', {}, [el('span', { text: 'Character' }), pick,
+      el('button', { text: 'Play', onclick: () => character.force(pick.value as CharacterState) })])];
   }
 
   private apply(o: ConfigOverrides): void {

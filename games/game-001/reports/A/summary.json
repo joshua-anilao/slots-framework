@@ -7,7 +7,7 @@
   "variant": "A",
   "seed": 20261109,
   "rounds": 10000000,
-  "createdAt": "2026-11-10T19:09:49.803Z",
+  "createdAt": "2026-11-22T15:17:20.516Z",
   "rtp": 0.9650143359872305,
   "rtpBase": 0.6209567225558003,
   "rtpFreeSpins": 0.34403040598000095,
@@ -17,7 +17,7 @@
   "volatilityIndex": 7.1388632778545755,
   "maxWinX": 999.8709999999999,
   "capHits": 0,
-  "buyBonusRtp": 0.9538117022667104,
+  "buyBonusRtp": 0.9555773951000007,
   "session": {
     "sessions": 3000,
     "balance": 1000,
@@ -30,6 +30,8 @@
     "avgEndBalance": 926.8966666666656,
     "bestEndBalance": 11276.220000000005
   },
+  "goldBank": "off",
+  "bank": null,
   "checks": [
     {
       "name": "RTP",
@@ -51,7 +53,7 @@
     },
     {
       "name": "Buy bonus RTP",
-      "value": "95.38%",
+      "value": "95.56%",
       "target": "96.50% ± 2.00%",
       "pass": true
     }

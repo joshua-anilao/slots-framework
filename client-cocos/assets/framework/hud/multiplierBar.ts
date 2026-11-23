@@ -1,6 +1,12 @@
 import { Graphics, Node, Tween, Vec3, tween } from 'cc';
 import type { GameConfig } from '../../shared/math-core/index';
+import { addGlow } from '../ui/glow';
+import { GLOW_STYLE } from '../ui/glowStyle';
 import { drawRoundRect, makeLabel, uiNode } from '../ui/uiKit';
+
+/** Size and corner radius of one step (px). */
+const STEP_HEIGHT = 54;
+const STEP_RADIUS = 14;
 
 /** Multiplier bar (feature 6): ladder steps with the current one lit. Endless variants show one growing step. */
 export class MultiplierBar {
@@ -50,32 +56,41 @@ export class MultiplierBar {
     this.node.removeAllChildren();
     this.lit = undefined;
     const v = this.config().multiplier.variant;
-    const gold = this.free ? '#ff9f1c' : '#f2b705';
+    const gold = this.free ? '#29d3c0' : '#f5c542';
     if (this.ladder.length) {
       const n = this.ladder.length, gap = 12, w = (this.width - gap * (n - 1)) / n;
       this.ladder.forEach((x, i) => {
         const on = x === value;
         const step = uiNode(`Step${x}`, w, 54);
         step.setPosition(-this.width / 2 + w / 2 + i * (w + gap), 0, 0);
-        drawRoundRect(step.addComponent(Graphics), w, 54, { fill: on ? gold : '#3a2a20', stroke: on ? '#fff3b0' : '#5b4636', strokeWidth: on ? 4 : 3, radius: 14 });
-        makeLabel(step, `x${x}`, on ? 34 : 28, on ? '#3a1f12' : '#a89886', 0, 0, w);
+        drawRoundRect(step.addComponent(Graphics), w, 54, { fill: on ? gold : '#2b1c40', stroke: on ? '#fff6c8' : '#352449', strokeWidth: on ? 4 : 3, radius: 14 });
+        makeLabel(step, `x${x}`, on ? 34 : 28, on ? (this.free ? '#002b28' : '#3b2300') : '#74698a', 0, 0, w);
         this.node.addChild(step);
-        if (on) this.lit = step;
+        if (on) { this.lit = step; this.addStepGlow(step, w); }
       });
     } else if (v === 'B') {
       const step = uiNode('StepEndless', 200, 54);
       step.setPosition(-110, 0, 0);
-      drawRoundRect(step.addComponent(Graphics), 200, 54, { fill: gold, stroke: '#fff3b0', strokeWidth: 4, radius: 14 });
-      makeLabel(step, `x${value}`, 36, '#3a1f12', 0, 0, 200);
+      drawRoundRect(step.addComponent(Graphics), 200, 54, { fill: gold, stroke: '#fff6c8', strokeWidth: 4, radius: 14 });
+      makeLabel(step, `x${value}`, 36, this.free ? '#002b28' : '#3b2300', 0, 0, 200);
       this.node.addChild(step);
       this.lit = step;
-      makeLabel(this.node, 'Endless', 26, '#ffe9b0', 140, 0, 200);
+      this.addStepGlow(step, 200);
+      makeLabel(this.node, 'Endless', 26, '#f6efff', 140, 0, 200);
     } else {
-      makeLabel(this.node, 'Spots: cells that win twice get x2, x4, x8...', 24, '#ffe9b0', 0, 0, this.width);
+      makeLabel(this.node, 'Spots: cells that win twice get x2, x4, x8...', 24, '#f6efff', 0, 0, this.width);
     }
     if (this.lit) {
+      // The lit step draws above its neighbours so its glow is not covered.
+      this.lit.setSiblingIndex(this.node.children.length - 1);
       this.lit.setScale(1.3, 1.3, 1);
       tween(this.lit).to(0.25, { scale: new Vec3(1, 1, 1) }, { easing: 'backOut' }).start();
     }
+  }
+
+  /** Glow behind the lit step: gold in the base game, teal in free spins. */
+  private addStepGlow(step: Node, width: number): void {
+    const s = GLOW_STYLE.multStep;
+    addGlow(step, 'StepGlow', width, STEP_HEIGHT, STEP_RADIUS, { glow: this.free ? s.free : s.base });
   }
 }

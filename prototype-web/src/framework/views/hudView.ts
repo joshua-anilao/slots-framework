@@ -3,12 +3,14 @@ import type { GameConfig } from '@slots/math-core';
 import { el } from '../core/dom';
 import { buzz } from '../core/settings';
 import { money, STRINGS } from '../strings';
+import { BankPot, GOLD_BANK_FX } from './bankPot';
 
 /** Multiplier bar (feature 6): ladder steps with the current one lit. */
 export class MultiplierBar {
   readonly root = el('div.mult-bar');
   private ladder: number[] = [];
   private free = false;
+  private lastBank = 0;
 
   constructor(private config: () => GameConfig) {}
 
@@ -38,18 +40,32 @@ export class MultiplierBar {
     return i >= 0 ? i : Math.min(6, Math.max(0, Math.round(Math.log2(Math.max(1, value)))));
   }
 
-  set(value: number): void {
+  /** Lights the step for `value` (the ladder part). With a gold bank the lit step reads "x2 + 5". */
+  set(value: number, bank = 0, pulseMs = 0): void {
+    const grew = bank > this.lastBank;
+    this.lastBank = bank;
     const v = this.config().multiplier.variant;
+    const plus = bank > 0 ? ` + ${bank}` : '';
     if (this.ladder.length) {
-      this.root.replaceChildren(...this.ladder.map(x => el(`div.step${x === value ? '.on' : ''}`, { text: `x${x}` })));
+      this.root.replaceChildren(...this.ladder.map(x => x === value
+        ? el(`div.step.on${bank > 0 ? '.with-bank' : ''}`, { text: `x${x}${plus}` })
+        : el('div.step', { text: `x${x}` })));
     } else if (v === 'B') {
-      this.root.replaceChildren(el('div.step.on.wide', { text: `x${value}` }), el('div.note', { text: 'Endless' }));
+      this.root.replaceChildren(el(`div.step.on.wide${bank > 0 ? '.with-bank' : ''}`, { text: `x${value}${plus}` }), el('div.note', { text: 'Endless' }));
     } else {
       this.root.replaceChildren(el('div.note', { text: 'Multiplier spots: cells that win twice get x2, x4, x8...' }));
     }
     this.root.classList.toggle('free', this.free);
     const on = this.root.querySelector('.on');
     on?.animate([{ transform: 'scale(1.35)' }, { transform: 'scale(1)' }], { duration: 250, easing: 'ease-out' });
+    if (grew && on && pulseMs > 0) {
+      // The bank grew: the lit step yoyos and its glow flashes.
+      on.animate([
+        { transform: 'scale(1)', filter: 'brightness(1)' },
+        { transform: `scale(${GOLD_BANK_FX.bankPulseScale})`, filter: 'brightness(1.6)', offset: 0.4 },
+        { transform: 'scale(1)', filter: 'brightness(1)' },
+      ], { duration: pulseMs, easing: 'ease-out' });
+    }
   }
 }
 
@@ -57,12 +73,11 @@ export class MultiplierBar {
 export class WinBox {
   readonly root = el('div.win-box');
   readonly valueEl = el('span.win-value', { text: money(0) });
-  private stepNote = el('span.step-note');
   private shown = 0;
   private anim = 0;
 
   constructor() {
-    this.root.append(el('span.win-label', { text: STRINGS.win }), this.valueEl, this.stepNote);
+    this.root.append(el('span.win-label', { text: STRINGS.win }), this.valueEl);
   }
 
   private target = 0;
@@ -103,11 +118,6 @@ export class WinBox {
     };
     this.anim = requestAnimationFrame(tick);
   }
-
-  note(text: string): void {
-    this.stepNote.textContent = text;
-    if (text) this.stepNote.animate([{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 180 });
-  }
 }
 
 export interface HudHandlers {
@@ -132,6 +142,8 @@ export class HudView {
   readonly footer: HTMLElement;
   readonly mult: MultiplierBar;
   readonly win = new WinBox();
+  /** Gold Frame Bank pot (feature 23); main.ts puts it in the multiplier row. */
+  readonly pot = new BankPot();
   private fsLeft = el('span.fs-left', { text: '0' });
   private fsTotal = el('span.fs-total');
   readonly betBtn: HTMLButtonElement;
@@ -151,11 +163,24 @@ export class HudView {
   private roundId = el('span.round-id');
   readonly versionEl: HTMLElement;
   readonly soundBtn: HTMLElement;
+  /** Marquee scroll speed in design px per second (the old 18 s loop over strip + text was about this fast). Row in docs/TUNING.md. */
+  static readonly MARQUEE_PX_PER_S = 80;
+  private readonly marquee: HTMLElement;
+  private readonly marqueeBox: HTMLElement;
+  private readonly marqueeText: HTMLElement;
 
   constructor(game: LocalGame, private h: HudHandlers, version: string) {
     const cfg = () => game.services.config.config.value;
     this.mult = new MultiplierBar(cfg);
-    this.top = el('div.top-bar', {}, [el('div.marquee', {}, [el('span', { text: STRINGS.marquee })])]);
+    this.marqueeText = el('span', { text: STRINGS.marquee });
+    this.marquee = el('div.marquee', {}, [this.marqueeText]);
+    this.marqueeBox = el('div.marquee-box', {}, [this.marquee]);
+    this.top = el('div.top-bar', {}, [this.marqueeBox]);
+    if (typeof ResizeObserver !== 'undefined') {
+      const watch = new ResizeObserver(() => this.fitMarquee());
+      watch.observe(this.marqueeBox);
+      watch.observe(this.marquee); // the span is inline and cannot be observed itself
+    }
     this.header = el('div.header', {}, [
       el('div.fs-title', {}, [el('span.fs-label', { text: STRINGS.freeSpinsLeftLabel }), el('div.fs-count', {}, [this.fsLeft, this.fsTotal])]),
       el('div.logo', {}, [el('span.logo-main', { text: cfg().name.replace(/\s*\(.*\)\s*/, '').toUpperCase() }), el('span.logo-sub', { text: 'PROTOTYPE' })]),
@@ -213,6 +238,19 @@ export class HudView {
     game.models.speed.mode.subscribe(m => this.showSpeed(m));
     this.mult.mode(false);
     this.startIcon();
+  }
+
+  /**
+   * The marquee text sits in a box with equal insets. If it fits it is shown still and centred;
+   * if not it scrolls inside the box only, at MARQUEE_PX_PER_S (one pass = box width + text width).
+   */
+  private fitMarquee(): void {
+    const boxW = this.marqueeBox.clientWidth;
+    if (!boxW) return; // not on screen yet
+    const textW = this.marqueeText.offsetWidth;
+    const still = textW <= boxW;
+    this.marquee.classList.toggle('still', still);
+    this.marquee.style.animationDuration = still ? '' : `${((boxW + textW) / HudView.MARQUEE_PX_PER_S).toFixed(2)}s`;
   }
 
   /** Tap runs onTap; holding for HOLD_MS runs onHold instead (with a fill showing the hold). */

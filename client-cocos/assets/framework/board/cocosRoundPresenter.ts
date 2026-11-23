@@ -138,7 +138,7 @@ export class CocosRoundPresenter implements IRoundPresenter {
     if (!up) return;
     const level = s.mult.levelOf(value);
     this.sfx('multUp', level);
-    s.fx.burst([s.mult.litWorld()], 10 + level * 6, ['#fff3b0', '#ffd36b', '#ffffff']);
+    s.fx.burst([s.mult.litWorld()], 10 + level * 6, ['#fff3b0', '#f5c542', '#ffffff']);
   }
 
   private async playSpin(spin: SpinOutcome, shownBefore: number): Promise<number> {

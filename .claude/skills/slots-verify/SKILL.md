@@ -41,7 +41,8 @@ tasklist //FI "IMAGENAME eq CocosCreator.exe" | grep -i cocoscreator && echo OPE
 - `typecheck:cocos` prints `skipped` when `client-cocos/build/cc-declarations/cc.d.ts` is missing. That is a skip, not a pass: say so, and tell Josh to copy it from `D:\Cocos\editors\Creator\3.8.8\resources\resources\3d\engine\bin\.declarations`.
 - `check:cocos` failing = `assets/shared/` is stale or hand-edited. Fix by `npm run sync:cocos`, never by editing the copy.
 - The sim exits with code 1 when any target in `game.json` is off. Read `games/<id>/reports/<variant>/summary.json` → `checks[]` and paste each `name / value / target / pass`. RTP noise at 10M is about ±0.4% (90% range in `rtpCi90`); do not chase ±0.1%.
-- A 10M sim takes minutes: start it with `run_in_background` and keep working. Record the elapsed time next to the result.
+- A 10M sim takes minutes: start the command itself with `run_in_background: true` (the Bash tool option) and keep working. Never put `&`, `nohup` or `( … ) &` inside the command: Git Bash kills it when the call returns. Record the elapsed time next to the result. `npm run sim:compare` gives all four variants at 1M in about 80 s.
+- If `typecheck` fails on `Cannot find module 'sharp'`, run `npm.cmd install` (sharp is a dev dependency for the art tools).
 - The sim writes `games/<id>/reports/<variant>/`. Those files are expected changes in a math run; list them under items to commit.
 - Take `git status --porcelain` before and after a run. Any changed file outside the spec's scope (especially under `client-cocos/` other than `assets/shared/` and `generated/`) goes under "Files outside scope touched".
 

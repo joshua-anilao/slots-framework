@@ -48,5 +48,29 @@ export function validateConfig(c: GameConfig): void {
   for (const [v, x] of Object.entries(c.buyBonus.priceXByVariant ?? {})) {
     if (!(typeof x === 'number' && x > 0)) p.push(`buyBonus.priceXByVariant.${v} must be a positive number`);
   }
+  validateGoldBank(c, p);
   if (p.length) throw new ConfigError(p);
+}
+
+/** Gold bank rules. A present but disabled block is still checked. */
+function validateGoldBank(c: GameConfig, p: string[]): void {
+  const b = c.goldBank;
+  if (!b) return;
+  for (const k of ['badgeChanceBase', 'badgeChanceFree'] as const) {
+    if (!(typeof b[k] === 'number' && b[k] >= 0 && b[k] <= 1)) p.push(`goldBank.${k} must be between 0 and 1`);
+  }
+  for (const k of ['valuesBase', 'valuesFree'] as const) {
+    const list = b[k];
+    if (!Array.isArray(list) || list.length === 0) { p.push(`goldBank.${k} must not be empty`); continue; }
+    list.forEach((x, i) => {
+      if (!(Number.isFinite(x.w) && x.w > 0)) p.push(`goldBank.${k}[${i}].w must be greater than 0`);
+      if (!(Number.isFinite(x.v) && x.v >= 2)) p.push(`goldBank.${k}[${i}].v must be a number of at least 2`);
+    });
+  }
+  for (const mode of ['reset', 'carry'] as const) {
+    for (const k of ['payScale', 'buyPriceX'] as const) {
+      const x = b.tuning?.[mode]?.[k];
+      if (x !== undefined && !(typeof x === 'number' && x > 0)) p.push(`goldBank.tuning.${mode}.${k} must be a positive number`);
+    }
+  }
 }

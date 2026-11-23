@@ -21,6 +21,16 @@ export function buildHtmlReport(r: SimReport): string {
     ['Max win seen', `${n(m.maxWinX)}x`, `cap ${n(c.maxWinX)}x · hit ${m.capHits} times`],
   ];
 
+  const bk = m.bank;
+  const bankSection = bk ? `<section><h2>Gold bank (${r.goldBank})</h2><table><tbody>
+    <tr><td>Average bank at the end of a base spin</td><td class="num">${n(bk.avgBankBase, 2)}</td></tr>
+    <tr><td>Average bank at the end of a free spin</td><td class="num">${n(bk.avgBankFree, 2)}</td></tr>
+    <tr><td>Largest bank seen</td><td class="num">${n(bk.maxBank)}</td></tr>
+    <tr><td>Badges banked</td><td class="num">${n(bk.badgesBanked)}</td></tr>
+    <tr><td>RTP from steps with a bank</td><td class="num">${pct(bk.rtpFromBankSteps)}</td></tr>
+    <tr><td>Share of RTP from steps with a bank</td><td class="num">${pct(bk.shareOfRtpFromBankSteps)}</td></tr></tbody></table>
+    <p class="note">Main rounds only. Bank pay scale ${n(payScale(c), 4)} (all pays, variant scale included).</p></section>` : '';
+
   const maxProb = Math.max(...m.buckets.map(b => b / m.rounds));
   const dist = BUCKETS.map((b, i) => {
     const p = m.buckets[i] / m.rounds;
@@ -94,6 +104,7 @@ td,th{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-
 <tr><td>Free spins retriggers</td><td class="num">${n(m.retriggers)}</td></tr></tbody></table></section>
 <section><h2>Win celebrations</h2><table><tbody>${tiers}</tbody></table></section>
 </div>
+${bankSection}
 <section><h2>Win distribution</h2><table><thead><tr><th>Round win</th><th class="num">Chance</th><th></th><th class="num">RTP share</th></tr></thead><tbody>${dist}</tbody></table></section>
 <div class="grid2">${buy}${session}</div>
 <div class="grid2">

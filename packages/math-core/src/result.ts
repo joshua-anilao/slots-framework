@@ -9,6 +9,8 @@ export interface Cell {
   s: string;
   /** True if the symbol is golden. */
   g: boolean;
+  /** Badge value (Gold Frame Bank), golden cells only. */
+  b?: number;
 }
 
 /** grid[reel][row], row 0 is the top. */
@@ -49,6 +51,10 @@ export interface CascadeStep {
   toWild: Pos[];
   /** Multiplier spot values after this step (variant D only), as [reel][row]. */
   spots?: number[][];
+  /** Gold bank value added to this step's multiplier (present only when the bank is on). */
+  bank?: number;
+  /** Badges of golden cells that won in this step and went into the bank (present only when the bank is on). */
+  banked?: { pos: Pos; value: number }[];
 }
 
 /** One spin, base or free, with all its cascades. */

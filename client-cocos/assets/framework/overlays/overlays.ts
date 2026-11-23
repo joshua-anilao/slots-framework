@@ -18,7 +18,7 @@ export class Overlays {
     parent.addChild(this.node);
     this.toastNode = uiNode('Toast', 600, 70);
     this.toastNode.setPosition(0, 330, 0);
-    drawRoundRect(this.toastNode.addComponent(Graphics), 600, 70, { fill: '#1b0f0a', stroke: '#f5c542', radius: 35 });
+    drawRoundRect(this.toastNode.addComponent(Graphics), 600, 70, { fill: '#0a0710', stroke: '#f5c542', radius: 35 });
     this.toastLabel = makeLabel(this.toastNode, '', 26, '#ffffff', 0, 0, 560);
     this.toastNode.active = false;
     this.node.addChild(this.toastNode);
@@ -42,11 +42,11 @@ export class Overlays {
   /** A banner (free spins intro, retrigger). Closes on tap or after `ms`. */
   async banner(title: string, sub: string, ms: number, pace: Pace, extra = ''): Promise<void> {
     const n = this.panel();
-    const t = this.fitLabel(makeLabel(n, title, 50, '#ffd36b', 0, 150, 660));
+    const t = this.fitLabel(makeLabel(n, title, 50, '#f5c542', 0, 150, 660));
     t.enableOutline = true; t.outlineColor = hex('#3a1f12'); t.outlineWidth = 6;
     if (sub) { const s = this.fitLabel(makeLabel(n, sub, 56, '#ffffff', 0, 40, 660)); s.enableOutline = true; s.outlineColor = hex('#3a1f12'); s.outlineWidth = 6; }
-    if (extra) this.fitLabel(makeLabel(n, extra, 36, '#ffe9b0', 0, -70, 660));
-    makeLabel(n, STRINGS.tapToContinue, 26, '#cfc2b0', 0, -190, 660, { bold: false });
+    if (extra) this.fitLabel(makeLabel(n, extra, 36, '#f6efff', 0, -70, 660));
+    makeLabel(n, STRINGS.tapToContinue, 26, '#b9a8d6', 0, -190, 660, { bold: false });
     await this.holdThenClose(n, pace.hurry ? Math.min(ms, 500) : ms);
   }
 
@@ -54,7 +54,7 @@ export class Overlays {
   async bigWin(amount: number, bet: number, tiers: { big: number; super: number; ultra: number }, finalTier: WinTier, pace: Pace, onCoin: () => void = () => undefined): Promise<void> {
     const n = this.panel();
     this.coins(n, finalTier === 'ultra' ? 40 : finalTier === 'super' ? 25 : 14);
-    const title = this.fitLabel(makeLabel(n, STRINGS.tier.big, 84, '#ffd36b', 0, 130, 660));
+    const title = this.fitLabel(makeLabel(n, STRINGS.tier.big, 84, '#f5c542', 0, 130, 660));
     title.enableOutline = true; title.outlineColor = hex('#3a1f12'); title.outlineWidth = 8;
     const value = this.fitLabel(makeLabel(n, money(0), 76, '#ffffff', 0, -10, 660));
     value.enableOutline = true; value.outlineColor = hex('#3a1f12'); value.outlineWidth = 8;
@@ -88,7 +88,7 @@ export class Overlays {
   async countBanner(title: string, sub: string, amount: number, pace: Pace, onCoin: () => void = () => undefined): Promise<void> {
     const n = this.panel();
     this.coins(n, 24);
-    const t = this.fitLabel(makeLabel(n, title, 50, '#ffd36b', 0, 190, 660));
+    const t = this.fitLabel(makeLabel(n, title, 50, '#f5c542', 0, 190, 660));
     t.enableOutline = true; t.outlineColor = hex('#3a1f12'); t.outlineWidth = 6;
     this.fitLabel(makeLabel(n, sub, 40, '#ffffff', 0, 100, 660));
     const value = this.fitLabel(makeLabel(n, money(0), 80, '#ffffff', 0, -10, 660));

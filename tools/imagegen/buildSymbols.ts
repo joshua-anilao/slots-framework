@@ -20,7 +20,7 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import sharp from 'sharp';
+import sharp, { type OverlayOptions } from 'sharp';
 import { CELL, fitToCell } from './symbolFit';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -76,8 +76,8 @@ async function main() {
   const themeDir = join(gameDir, 'theme');
   for (const d of ['source', 'symbols', 'atlas']) mkdirSync(join(themeDir, d), { recursive: true });
 
-  const overlays: sharp.OverlayOptions[] = [];
-  const clears: sharp.OverlayOptions[] = [];
+  const overlays: OverlayOptions[] = [];
+  const clears: OverlayOptions[] = [];
   for (const f of frames) {
     const src = manifest[f.name];
     if (!src) continue;

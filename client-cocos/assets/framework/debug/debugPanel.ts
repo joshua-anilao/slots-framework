@@ -4,7 +4,7 @@ import type { DebugController } from '../../shared/game-logic/index';
 import { drawRoundRect, makeButton, makeLabel, uiNode } from '../ui/uiKit';
 
 const PANEL_W = 680, PANEL_H = 1180;
-const BTN_FILL = '#f2b705', BTN_TEXT = '#3a1f12';
+const BTN_FILL = '#f5c542', BTN_TEXT = '#3a1f12';
 
 /**
  * Debug panel (feature 19) for Cocos. All the logic is in the shared DebugController; this only draws it.
@@ -21,7 +21,7 @@ export class DebugPanel {
 
     this.panel = uiNode('DebugPanel', PANEL_W, PANEL_H);
     this.panel.addComponent(BlockInputEvents);
-    drawRoundRect(this.panel.addComponent(Graphics), PANEL_W, PANEL_H, { fill: '#1b0f0a', stroke: '#3b82f6', radius: 24 });
+    drawRoundRect(this.panel.addComponent(Graphics), PANEL_W, PANEL_H, { fill: '#0f0a1a', stroke: '#3b82f6', radius: 24 });
     this.panel.active = false;
     parent.addChild(this.panel);
     this.build();
@@ -35,15 +35,15 @@ export class DebugPanel {
     makeButton(p, { w: 70, h: 56, x: 290, y: 540, text: 'X', fill: '#e11d48', textColor: '#ffffff', fontSize: 30, radius: 12 }, () => this.toggle());
 
     // Multiplier variant: tap to cycle, with a plain-language description under it.
-    makeLabel(p, 'Multiplier variant', 28, '#ffe9b0', -150, 470, 380, { align: 'left' });
+    makeLabel(p, 'Multiplier variant', 28, '#f6efff', -150, 470, 380, { align: 'left' });
     const variant = makeButton(p, { w: 120, h: 56, x: 240, y: 470, text: '', fill: BTN_FILL, textColor: BTN_TEXT, fontSize: 30, radius: 12 }, () => { dbg.cycleVariant(); });
-    const note = makeLabel(p, '', 21, '#cfc2b0', 0, 430, 620, { align: 'left', wrap: true, bold: false });
+    const note = makeLabel(p, '', 21, '#b9a8d6', 0, 430, 620, { align: 'left', wrap: true, bold: false });
 
     // Number rows: label, value, and - / + buttons.
     const values = new Map<string, ReturnType<typeof makeLabel>>();
     DEBUG_FIELDS.forEach((f, i) => {
       const y = 215 - i * 64;
-      makeLabel(p, f.label, 26, '#ffe9b0', -170, y, 340, { align: 'left' });
+      makeLabel(p, f.label, 26, '#f6efff', -170, y, 340, { align: 'left' });
       values.set(f.field, makeLabel(p, '', 28, '#ffffff', 110, y, 140));
       makeButton(p, { w: 64, h: 50, x: 215, y, text: '-', fill: BTN_FILL, textColor: BTN_TEXT, fontSize: 30, radius: 10 }, () => { dbg.nudge(f.field, -1); });
       makeButton(p, { w: 64, h: 50, x: 290, y, text: '+', fill: BTN_FILL, textColor: BTN_TEXT, fontSize: 30, radius: 10 }, () => { dbg.nudge(f.field, 1); });

@@ -25,7 +25,7 @@ export function drawRoundRect(g: Graphics, w: number, h: number, style: RoundRec
   }
 }
 
-export interface LabelOptions { align?: 'left' | 'center'; /** Wrap long text inside `width` and grow downward. */ wrap?: boolean; bold?: boolean }
+export interface LabelOptions { align?: 'left' | 'center' | 'right'; /** Wrap long text inside `width` and grow downward. */ wrap?: boolean; bold?: boolean }
 
 export function makeLabel(parent: Node, text: string, size: number, color: string, x: number, y: number, width = 640, opts: LabelOptions = {}): Label {
   const n = uiNode('Label', width, size * 1.4);
@@ -35,7 +35,7 @@ export function makeLabel(parent: Node, text: string, size: number, color: strin
   l.fontSize = size;
   l.lineHeight = Math.round(size * 1.3);
   l.color = hex(color);
-  l.horizontalAlign = opts.align === 'left' ? Label.HorizontalAlign.LEFT : Label.HorizontalAlign.CENTER;
+  l.horizontalAlign = opts.align === 'left' ? Label.HorizontalAlign.LEFT : opts.align === 'right' ? Label.HorizontalAlign.RIGHT : Label.HorizontalAlign.CENTER;
   l.verticalAlign = opts.wrap ? Label.VerticalAlign.TOP : Label.VerticalAlign.CENTER;
   l.isBold = opts.bold ?? true;
   if (opts.wrap) { l.enableWrapText = true; l.overflow = Label.Overflow.RESIZE_HEIGHT; n.getComponent(UITransform)!.setAnchorPoint(0.5, 1); }

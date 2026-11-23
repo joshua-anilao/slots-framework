@@ -1,5 +1,5 @@
 export { simulate, Accumulator, BUCKETS, WIN_TIERS } from './simulate';
-export type { SimOptions, SimReport, SessionStats } from './simulate';
+export type { SimOptions, SimReport, SessionStats, BankStats } from './simulate';
 export { buildHtmlReport } from './htmlReport';
 export { buildParSheet } from './parSheet';
 export { checkTargets } from './checks';

@@ -1,6 +1,8 @@
-import { Color, Graphics, Mask, Node, Tween, Vec3, tween } from 'cc';
+import { Graphics, Mask, Node, Tween, UIOpacity, Vec3, tween } from 'cc';
 import type { Cell, Grid, Pos } from '../../shared/math-core/index';
 import type { Pace } from '../../shared/game-logic/index';
+import { drawGlow, drawHorizontalLight } from '../ui/glow';
+import { GLOW_STYLE } from '../ui/glowStyle';
 import { hex, makeLabel, uiNode } from '../ui/uiKit';
 import type { BoardLayout } from './boardLayout';
 import { SymbolView } from './symbolView';
@@ -27,8 +29,14 @@ export class BoardView {
   readonly node: Node;
   hooks: BoardHooks = { onReelStop: () => undefined, onAnticipate: () => undefined, onBurst: () => undefined };
   private readonly columns: Node[] = [];
-  private readonly masks: Mask[] = [];
-  private readonly beams: Node[] = [];
+  /** Light inside each reel, behind its cards, shown only under the beam. */
+  private readonly beamLights: Node[] = [];
+  private readonly beamLightFades: UIOpacity[] = [];
+  /** Ring and halo around each reel, drawn above the neighbouring reels. */
+  private readonly beamGlows: Node[] = [];
+  /** Winning cards live here so their ring, halo and sway draw above every reel. */
+  private readonly winLayer: Node;
+  private winners: Array<{ view: SymbolView; reel: number }> = [];
   private readonly spotLayer: Node;
   private cells: Array<Array<SymbolView | null>>;
   private readonly pending = new Set<() => void>();
@@ -44,26 +52,34 @@ export class BoardView {
     private readonly scatterId: string,
   ) {
     this.node = uiNode('Board', layout.width, layout.height);
+    const beam = GLOW_STYLE.beam;
+    // Child order, back to front: beam lights, reels, winning cards, beam glows, spots.
     for (let r = 0; r < reels; r++) {
-      const x = layout.cell(r, 0).x;
-      const beam = uiNode('Beam', layout.cellW + 16, layout.height + 16);
-      beam.setPosition(x, 0, 0);
-      const g = beam.addComponent(Graphics);
-      g.fillColor = new Color(245, 197, 66, 150);
-      g.roundRect(-layout.cellW / 2 - 8, -layout.height / 2 - 8, layout.cellW + 16, layout.height + 16, 14);
-      g.fill();
-      beam.active = false;
-      this.beams.push(beam);
-      this.node.addChild(beam);
+      const light = uiNode(`BeamLight${r}`, layout.cellW, layout.height);
+      light.setPosition(layout.cell(r, 0).x, 0, 0);
+      drawHorizontalLight(light.addComponent(Graphics), layout.cellW, layout.height, beam.light);
+      this.beamLightFades.push(light.addComponent(UIOpacity));
+      light.active = false;
+      this.beamLights.push(light);
+      this.node.addChild(light);
     }
     for (let r = 0; r < reels; r++) {
       const col = uiNode(`Reel${r}`, layout.cellW, layout.height);
       col.setPosition(layout.cell(r, 0).x, 0, 0);
       const mask = col.addComponent(Mask);
       mask.type = Mask.Type.GRAPHICS_RECT;
-      this.masks.push(mask);
       this.columns.push(col);
       this.node.addChild(col);
+    }
+    this.winLayer = uiNode('WinLayer');
+    this.node.addChild(this.winLayer);
+    for (let r = 0; r < reels; r++) {
+      const glow = uiNode(`BeamGlow${r}`);
+      glow.setPosition(layout.cell(r, 0).x, 0, 0);
+      drawGlow(glow.addComponent(Graphics), layout.cellW, layout.height, beam.radius, { ring: beam.ring, glow: beam.glow });
+      glow.active = false;
+      this.beamGlows.push(glow);
+      this.node.addChild(glow);
     }
     this.spotLayer = uiNode('Spots');
     this.node.addChild(this.spotLayer);
@@ -151,8 +167,8 @@ export class BoardView {
         stagger = fall + t.anticipation * 0.5;
         const beamAt = cursor;
         this.later(() => {
-          if (!anticipating) { anticipating = true; this.anticipationOn(); this.hooks.onAnticipate(); }
-          this.beams.forEach((b, r) => { b.active = r === reel; });
+          if (!anticipating) { anticipating = true; this.hooks.onAnticipate(); }
+          this.moveBeam(reel);
         }, beamAt);
       } else {
         start = reel * t.reelStagger;
@@ -185,26 +201,28 @@ export class BoardView {
 
   /** Stops every animation at once and releases anything waiting on one. */
   finishAll(): void {
-    Tween.stopAll();
+    // Only the board's own tweens: other screens (ticker, marquee, windows) keep running.
+    this.each(v => { Tween.stopAllByTarget(v.node); Tween.stopAllByTarget(v.fade); });
+    this.beamLightFades.forEach(f => Tween.stopAllByTarget(f));
+    this.columns.forEach(c => Tween.stopAllByTarget(c));
     for (const done of Array.from(this.pending)) done();
   }
 
-  /** Lights the winning cells and dims the rest. */
+  /** Lights the winning cells and dims the rest. Winners move to the win layer so they draw above every reel. */
   highlight(positions: Pos[]): void {
+    this.lowerWinners();
     const win = new Set(positions.map(p => `${p.reel}:${p.row}`));
-    const hasWin = new Set(positions.map(p => p.reel));
     this.each((v, reel, row) => {
       const on = win.has(`${reel}:${row}`);
+      if (on) this.raiseWinner(v, reel);
       v.setWin(on);
       v.setDim(!on);
     });
-    // A reel with winners stops clipping, so its cards can sway over the neighbours.
-    this.masks.forEach((m, r) => { m.enabled = !hasWin.has(r); });
   }
 
   clearMarks(): void {
+    this.lowerWinners();
     this.each(v => { v.setWin(false); v.setDim(false); v.setCelebrate(false); });
-    this.masks.forEach(m => { m.enabled = true; });
   }
 
   /** Winning gold cards flip over to their back; they become WILD after the drop. */
@@ -213,6 +231,8 @@ export class BoardView {
     await Promise.all(positions.map(p => {
       const v = this.cells[p.reel]![p.row];
       if (!v) return Promise.resolve();
+      // Back into its column at its exact cell (the other winners are still bursting in the win layer).
+      this.lowerWinners(v);
       Tween.stopAllByTarget(v.node);
       v.node.angle = 0;
       return this.anim(done => { void v.flip(d, () => v.showBack()).then(done); });
@@ -226,7 +246,8 @@ export class BoardView {
       const v = this.cells[p.reel]![p.row];
       if (!v) return Promise.resolve();
       return this.anim(done => {
-        void v.flip(d, () => v.setCell({ s: wildId, g: false })).then(() => { v.setWin(true); done(); });
+        // The new WILD shows only its resting wild glow; it glows as a winner when it wins the next step.
+        void v.flip(d, () => v.setCell({ s: wildId, g: false })).then(() => done());
       });
     }));
   }
@@ -235,7 +256,6 @@ export class BoardView {
   async pop(removed: Pos[], pace: Pace): Promise<void> {
     const d = pace.t.pop / 1000;
     this.hooks.onBurst(removed.map(p => this.cellWorld(p)));
-    this.masks.forEach(m => { m.enabled = true; });
     await Promise.all(removed.map(p => {
       const v = this.cells[p.reel]![p.row];
       if (!v) return Promise.resolve();
@@ -254,6 +274,7 @@ export class BoardView {
   /** Cards above the gaps fall down, new cards fall in on top, then the grid is exactly `next`. */
   async drop(next: Grid, removed: Pos[], pace: Pace, backs: Pos[] = []): Promise<void> {
     const d = pace.t.drop / 1000;
+    this.lowerWinners();
     const moves: Array<Promise<void>> = [];
     for (let reel = 0; reel < this.reels; reel++) {
       const kept = this.cells[reel]!.filter((v): v is SymbolView => v !== null);
@@ -284,7 +305,6 @@ export class BoardView {
       const cell = next[reel]![row]!;
       if (v.symbol !== cell.s || v.isBack) v.setCell(cell);
     });
-    this.masks.forEach(m => { m.enabled = true; });
   }
 
   /** Scatters pulse before free spins start. */
@@ -314,20 +334,68 @@ export class BoardView {
 
   // --- helpers -------------------------------------------------------------------------------
 
-  private anticipationOn(): void {
-    // Dim everything except the scatters, which pulse.
-    this.each(v => {
-      const sc = v.symbol === this.scatterId;
-      v.setDim(!sc);
-      v.setCelebrate(sc);
+  /**
+   * Puts the beam on `reel` (the previous reel's beam goes out). Cards in the beam reel stay bright;
+   * every other non-scatter card dims, and scatters celebrate at the faster anticipation period.
+   */
+  private moveBeam(reel: number): void {
+    this.beamLights.forEach((light, r) => {
+      const on = r === reel;
+      const fade = this.beamLightFades[r]!;
+      Tween.stopAllByTarget(fade);
+      light.active = on;
+      this.beamGlows[r]!.active = on;
+      if (on) this.pulseBeamLight(fade);
     });
+    const antic = GLOW_STYLE.celebrate.anticipationPeriodSec;
+    this.each((v, r) => {
+      const sc = v.symbol === this.scatterId;
+      v.setDim(r !== reel && !sc);
+      v.setCelebrate(sc, antic);
+    });
+  }
+
+  /** The beam light breathes between its low and high opacity. */
+  private pulseBeamLight(fade: UIOpacity): void {
+    const { min, max, halfSec } = GLOW_STYLE.beam.pulse;
+    fade.opacity = Math.round(min * 255);
+    tween(fade).repeatForever(tween<UIOpacity>()
+      .to(halfSec, { opacity: Math.round(max * 255) }, { easing: 'sineInOut' })
+      .to(halfSec, { opacity: Math.round(min * 255) }, { easing: 'sineInOut' })).start();
   }
 
   private endSpin(): void {
     for (const id of this.timers) clearTimeout(id);
     this.timers = [];
-    this.beams.forEach(b => { b.active = false; });
+    this.beamLights.forEach((light, r) => {
+      Tween.stopAllByTarget(this.beamLightFades[r]!);
+      light.active = false;
+      this.beamGlows[r]!.active = false;
+    });
     this.each(v => { v.setCelebrate(false); v.setDim(false); });
+  }
+
+  /** Moves a winning card into the win layer, keeping its place on the board. */
+  private raiseWinner(v: SymbolView, reel: number): void {
+    if (v.node.parent === this.winLayer) return;
+    const x = this.columns[reel]!.position.x + v.node.position.x, y = v.node.position.y;
+    this.winLayer.addChild(v.node);
+    v.node.setPosition(x, y, 0);
+    this.winners.push({ view: v, reel });
+  }
+
+  /** Puts winners (all, or just `only`) back into their reel at their exact cell: local x 0, angle 0, no win look. */
+  private lowerWinners(only?: SymbolView): void {
+    const keep: typeof this.winners = [];
+    for (const w of this.winners) {
+      if (!w.view.node.isValid) continue;
+      if (only && w.view !== only) { keep.push(w); continue; }
+      w.view.setWin(false);
+      this.columns[w.reel]!.addChild(w.view.node);
+      w.view.node.setPosition(0, w.view.node.position.y, 0);
+      w.view.node.angle = 0;
+    }
+    this.winners = keep;
   }
 
   private later(fn: () => void, ms: number): void {
@@ -341,6 +409,8 @@ export class BoardView {
 
   private clearAll(): void {
     for (const col of this.columns) col.removeAllChildren();
+    this.winLayer.removeAllChildren();
+    this.winners = [];
     this.cells = this.empty();
     this.spotLayer.removeAllChildren();
   }

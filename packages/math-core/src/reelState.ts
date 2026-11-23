@@ -1,6 +1,10 @@
-import type { GameConfig } from './config';
+import type { BadgeValue, GameConfig } from './config';
+import { pickBadge } from './goldBank';
 import type { Cell, Grid } from './result';
 import type { IRng } from './rng';
+
+/** How golden cells roll a Gold Frame Bank badge: the chance, then the weighted values. */
+export interface BadgeRoll { chance: number; values: BadgeValue[] }
 
 /**
  * The reels of one spin: picks stop positions, builds the grid, and refills
@@ -20,6 +24,8 @@ export class ReelState {
     private readonly rng: IRng,
     private readonly goldenChance: number,
     forcedStops?: number[],
+    /** Gold bank badge roll; leave out when the bank is off. */
+    private readonly badge?: BadgeRoll,
   ) {
     const { reels, rows } = config.grid;
     this.goldenReels = new Set(config.golden.enabled ? config.golden.reels : []);
@@ -61,13 +67,21 @@ export class ReelState {
 
   /** Deep copy of the grid for the Spin Result. */
   snapshot(): Grid {
-    return this.grid.map(col => col.map(c => ({ s: c.s, g: c.g })));
+    return this.grid.map(col => col.map(c => {
+      const copy: Cell = { s: c.s, g: c.g };
+      if (c.b !== undefined) copy.b = c.b;
+      return copy;
+    }));
   }
 
   private makeCell(reel: number, id: string): Cell {
     const golden = this.goldenReels.has(reel) && this.goldenIds.has(id) && this.goldenChance > 0
       && this.rng.nextFloat() < this.goldenChance;
-    return { s: id, g: golden };
+    const cell: Cell = { s: id, g: golden };
+    if (golden && this.badge && this.badge.chance > 0 && this.rng.nextFloat() < this.badge.chance) {
+      cell.b = pickBadge(this.badge.values, this.rng.nextFloat());
+    }
+    return cell;
   }
 }
 

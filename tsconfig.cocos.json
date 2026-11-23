@@ -3,6 +3,6 @@
     "target": "ES2020", "module": "ESNext", "moduleResolution": "Bundler", "strict": true, "noEmit": true,
     "experimentalDecorators": true, "skipLibCheck": true, "lib": ["ES2020", "DOM"], "types": []
   },
-  "files": ["client-cocos/build/cc-declarations/cc.d.ts"],
+  "files": ["client-cocos/build/cc-declarations/cc.d.ts", "tools/ccEnvStub.d.ts"],
   "include": ["client-cocos/assets/framework/**/*.ts", "client-cocos/assets/game/**/*.ts", "client-cocos/assets/shared/**/*.ts"]
 }

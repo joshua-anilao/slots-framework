@@ -132,6 +132,18 @@
       "D": 0.83
     }
   },
+  "goldBank": {
+    "enabled": false,
+    "badgeChanceBase": 0.15,
+    "badgeChanceFree": 0.3,
+    "valuesBase": [{ "v": 2, "w": 50 }, { "v": 3, "w": 30 }, { "v": 5, "w": 15 }, { "v": 10, "w": 5 }],
+    "valuesFree": [{ "v": 2, "w": 50 }, { "v": 3, "w": 30 }, { "v": 5, "w": 15 }, { "v": 10, "w": 2 }],
+    "carryInFree": false,
+    "tuning": {
+      "reset": { "payScale": 0.7935, "buyPriceX": 58.2 },
+      "carry": { "payScale": 0.6562, "buyPriceX": 71.6 }
+    }
+  },
   "freeSpins": {
     "enabled": true,
     "scatterSymbol": "SC",

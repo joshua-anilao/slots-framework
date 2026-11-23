@@ -1,14 +1,23 @@
 /* Placeholder theme styles. Design size 720x1280, scaled to fit. */
 :root {
   --bg0: #120a1f; --bg1: #241337; --bg2: #341c4f;
+  --badge-coin-size: 40px; --bank-pot-width: 120px;
+  --bank-pot-value-size: 34px; --mult-bank-step-size: 32px; --mult-tag-size: 64px;
   --gold: #f5c542; --gold2: #b8860b; --text: #f6efff; --muted: #b9a8d6;
   --fs: #0f3b46; --win: #ffe37a;
+  /* Cell size; ReelsView sets its own on .reels (stage layout 130x158). Rows in docs/TUNING.md, "Layout (prototype)". */
+  --cell-w: 128px; --cell-h: 150px;
+  /* WILD and SCATTER boxes are this much of a normal symbol box (v4); a size, never a scale animation */
+  --special-scale: 1.12; --special-size: calc(var(--special-scale) * 100%);
+  /* Marquee text keeps this much empty space at both ends of its strip (equal left and right) */
+  --marquee-inset: 24px; --marquee-fade: 14px;
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; background: #120a1f; color: var(--text); overflow: hidden;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; touch-action: manipulation; }
 button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
-#stage { position: fixed; inset: 0; overflow: hidden; }
+/* overflow: clip (after the hidden fallback) cannot be scrolled by focus or scrollIntoView, which shifted the whole screen sideways (D5) */
+#stage { position: fixed; inset: 0; overflow: hidden; overflow: clip; }
 /* Wide screens (desktop, tablet landscape): a themed backdrop fills the space outside the game.
    Placeholder art is drawn in CSS; a theme replaces it with its bg_desktop image (art guide). */
 .backdrop { position: absolute; inset: -40px; background:
@@ -23,13 +32,19 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 /* Before the intro: game parts stay hidden behind the loading screen */
 .screen.pre-intro > :not(.loading):not(.fx-layer):not(.touch-layer), .screen.pre-intro .sym { opacity: 0; }
 .screen { position: absolute; left: 50%; top: 50%; width: 720px; height: 1280px; transform-origin: center;
-  background: radial-gradient(120% 70% at 50% 35%, var(--bg2), var(--bg1) 55%, var(--bg0)); overflow: hidden;
+  background: radial-gradient(120% 70% at 50% 35%, var(--bg2), var(--bg1) 55%, var(--bg0)); overflow: hidden; overflow: clip;
   display: flex; flex-direction: column; align-items: center; transition: background .6s; }
 body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(--fs) 55%, #061a20); }
 
 /* Top bar + marquee */
 .top-bar { width: 100%; height: 52px; background: rgba(0,0,0,.45); border-bottom: 1px solid rgba(245,197,66,.3); overflow: hidden; display: flex; align-items: center; }
-.marquee { white-space: nowrap; animation: marquee 18s linear infinite; font-size: 20px; color: var(--muted); padding-left: 100%; }
+/* Marquee: the text lives in an inner box with equal insets and faded ends. Short text is shown still and centred;
+   long text scrolls only inside the box (HudView sets .still or the duration after measuring). */
+.marquee-box { flex: 1; min-width: 0; height: 100%; margin: 0 var(--marquee-inset); overflow: hidden; display: flex; align-items: center;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 var(--marquee-fade), #000 calc(100% - var(--marquee-fade)), transparent); }
+.marquee { flex: none; white-space: nowrap; animation: marquee 18s linear infinite; font-size: 20px; color: var(--muted); padding-left: 100%; }
+.marquee.still { animation: none; padding-left: 0; margin: 0 auto; }
 @keyframes marquee { to { transform: translateX(-100%); } }
 
 /* Header */
@@ -61,16 +76,21 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 .mult-bar .note { color: var(--muted); font-size: 20px; }
 .mult-bar.free .step.on { background: linear-gradient(#c8fff5, #29d3c0); color: #002b28; box-shadow: 0 0 24px rgba(41,211,192,.8); }
 
-/* Reels */
+/* Reels. Symbols sit straight on the board (no card tile); WILD and SCATTER are bigger and drawn on top. */
 .reel-frame { position: relative; padding: 10px; border-radius: 22px; margin-top: 4px;
   background: linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)); border: 3px solid var(--gold2);
   box-shadow: 0 0 0 2px #000, inset 0 0 30px rgba(0,0,0,.6), 0 0 30px rgba(245,197,66,.15); }
 .reels { position: relative; display: flex; gap: 6px; }
-.reel { position: relative; width: 128px; overflow: hidden; border-radius: 10px; background: rgba(255,255,255,.03); }
+/* The column tint is kept as a faint guide. Columns do not clip at rest (specials stand taller than a cell); .clip is set while cards spin, drop or cascade. */
+.reel { position: relative; width: var(--cell-w); overflow: visible; border-radius: 10px; background: rgba(255,255,255,.03); }
+.reels.clip .reel { overflow: hidden; }
+.reels.clip .reel.has-win { overflow: visible; }
+/* A column with a special stands above its neighbours */
+.reel:has(.t-wild, .t-scatter) { z-index: 2; }
 /* Anticipation: other reels dim, the dropping reel stands in a light beam */
 .reels.antic-on .reel:not(.beam) .sym:not(.t-scatter) { filter: brightness(.35); transition: filter .2s; }
 .reels.antic-on .sym.t-scatter { animation: celebrate .45s linear infinite; z-index: 2; }
-.reel.beam { z-index: 3; box-shadow: 0 0 0 3px #fff3b0, 0 0 40px 12px rgba(245,197,66,.75); }
+.reels .reel.beam { z-index: 4; box-shadow: 0 0 0 3px #fff3b0, 0 0 40px 12px rgba(245,197,66,.75); }
 .reel.beam::before { content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, transparent, rgba(255,240,170,.55) 30%, rgba(255,255,230,.85) 50%, rgba(255,240,170,.55) 70%, transparent);
   animation: beam .5s ease-in-out infinite alternate; }
@@ -79,26 +99,28 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 .reel.land .strip { animation: land .18s ease-out; }
 @keyframes land { 50% { transform: translateY(4px); } }
 .strip { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-.sym { position: absolute; left: 4px; width: 120px; height: 142px; margin-top: 4px; border-radius: 14px;
-  background: linear-gradient(160deg, color-mix(in srgb, var(--bg) 85%, white), var(--bg) 60%, color-mix(in srgb, var(--bg) 70%, black));
-  color: var(--fg); display: flex; flex-direction: column; align-items: center; justify-content: center;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 0 3px 0 rgba(0,0,0,.4); transition: opacity .15s, filter .15s; }
+.sym { --art: calc(var(--cell-w) - 20px); --special-art: calc(var(--art) * var(--special-scale) * .88); position: absolute; left: 0; width: var(--cell-w); height: var(--cell-h); border-radius: 14px;
+  color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity .15s, filter .15s; }
 .sym .glyph { font-size: 64px; font-weight: 900; line-height: 1; }
-.sym.t-low .glyph { font-size: 70px; }
-.sym .art { width: 108px; height: 108px; display: block; margin-top: -6px; filter: drop-shadow(0 3px 2px rgba(60,25,10,.35)); }
+.sym .art { width: var(--art); height: var(--art); display: block; margin-top: -6px; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
 .sym .art svg { width: 100%; height: 100%; display: block; }
-.sym.food { box-shadow: inset 0 -10px 0 var(--accent), inset 0 0 0 2px rgba(58,31,18,.55), 0 3px 0 rgba(0,0,0,.4); }
-.sym.food.t-low { box-shadow: inset 0 -6px 0 var(--accent), inset 0 0 0 2px rgba(58,31,18,.45), 0 3px 0 rgba(0,0,0,.4); }
-.sym.t-scatter .art, .sym.t-wild .art { width: 84px; height: 84px; margin-top: 4px; }
-.sym.t-scatter .glyph { margin-top: -4px; }
-.sym.t-wild .glyph { font-size: 34px; letter-spacing: 1px; }
-.sym.t-scatter .glyph { font-size: 25px; letter-spacing: 0; }
+/* Premium specials (WILD, SCATTER, and a WILD from a golden card): a bigger box, centred on the cell, on top.
+   Grown with size and offset, not transform, because the card animations own transform. */
+.reel .sym.t-wild, .reel .sym.t-scatter { z-index: 2;
+  width: var(--special-size); height: calc(var(--cell-h) * var(--special-scale));
+  left: calc((100% - var(--special-size)) / 2); margin-top: calc(var(--cell-h) * (1 - var(--special-scale)) / 2); }
+.sym.t-scatter .art, .sym.t-wild .art { width: var(--special-art); height: var(--special-art); margin-top: 0; }
+/* The word sits on its own ribbon so it reads without a tile: gold for WILD, red for SCATTER */
+.sym.t-wild .glyph, .sym.t-scatter .glyph { margin-top: -8px; padding: 1px 12px 3px; border-radius: 8px; border: 2px solid #1f0d00; box-shadow: 0 3px 0 rgba(0,0,0,.45);
+  -webkit-text-stroke: 4px #1f0d00; paint-order: stroke fill; letter-spacing: 1px; position: relative; z-index: 1; }
+.sym.t-wild .glyph { font-size: 32px; color: #fff6c8; background: linear-gradient(#ffe48a, #f2b705 55%, #b8860b); }
+.sym.t-scatter .glyph { font-size: 24px; letter-spacing: 0; color: #fff; background: linear-gradient(#fb4a6b, #be123c 55%, #881337); }
 .sym.t-scatter .sub { font-size: 20px; font-weight: 800; }
-.sym.t-wild { box-shadow: inset 0 0 0 3px #fff3b0, 0 0 14px rgba(245,197,66,.8); }
-.sym.t-scatter { box-shadow: inset 0 0 0 3px #b5fff6, 0 0 14px rgba(41,211,192,.8); }
-.sym.gold { background: linear-gradient(145deg, #fff3b0 0%, #f5c542 22%, #b8860b 48%, #ffe48a 62%, #c8961a 82%, #8a6200 100%);
-  box-shadow: inset 0 0 0 3px #fff6c8, inset 0 0 0 6px #8a6200, 0 0 18px rgba(245,197,66,.9); overflow: hidden; }
-.sym.gold .glyph { text-shadow: 0 2px 0 rgba(255,255,255,.6), 0 -1px 0 rgba(0,0,0,.35); }
+.sym.t-wild .art { filter: drop-shadow(0 0 10px rgba(245,197,66,.85)) drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+.sym.t-scatter .art { filter: drop-shadow(0 0 10px rgba(255,90,120,.8)) drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
+/* Golden card: no fill; a gold frame with a glow, a glow on the art, and the foil sweep clipped to the frame */
+.sym.gold { border: 3px solid #f5c542; overflow: hidden; box-shadow: 0 0 16px rgba(245,197,66,.9), inset 0 0 14px rgba(245,197,66,.45); }
+.sym.gold .art { filter: drop-shadow(0 0 9px rgba(245,197,66,.95)) drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
 .sym .foil { position: absolute; inset: -20%; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.75) 50%, transparent 60%);
   animation: foil 2.4s ease-in-out infinite; pointer-events: none; }
 @keyframes foil { 0%, 55% { transform: translateX(-70%); } 100% { transform: translateX(70%); } }
@@ -109,15 +131,18 @@ body.fs .screen { background: radial-gradient(120% 70% at 50% 35%, #1b6070, var(
 .sym.blur .glyph { animation: none; }
 .sym.blur { filter: blur(1.5px); opacity: .85; }
 .sym.dim { opacity: .9; filter: brightness(.28) grayscale(.5); }
-.sym.celebrate { z-index: 2; animation: celebrate .5s linear infinite; }
+.sym.celebrate { z-index: 3; animation: celebrate .5s linear infinite; }
 /* No scaling on cards (Josh): wins and scatters shake and glow instead */
 @keyframes celebrate { 0% { transform: rotate(0); box-shadow: 0 0 0 3px #b5fff6, 0 0 20px #29d3c0; } 25% { transform: rotate(-4deg); }
   50% { transform: rotate(0); box-shadow: 0 0 0 5px #fff, 0 0 46px #29d3c0; } 75% { transform: rotate(4deg); } 100% { transform: rotate(0); box-shadow: 0 0 0 3px #b5fff6, 0 0 20px #29d3c0; } }
-.sym.back { background: repeating-linear-gradient(45deg, #b32020 0 10px, #8f1515 10px 20px); box-shadow: inset 0 0 0 5px #f5c542, inset 0 0 0 8px #fff3b0;
+/* Card back (a golden card waiting to flip to WILD) keeps its striped look: it shows only for the flip */
+.sym.back { left: 4px; width: calc(var(--cell-w) - 8px); height: calc(var(--cell-h) - 8px); margin-top: 4px;
+  background: repeating-linear-gradient(45deg, #b32020 0 10px, #8f1515 10px 20px); box-shadow: inset 0 0 0 5px #f5c542, inset 0 0 0 8px #fff3b0;
   color: #f5c542; }
 .sym.back .back-mark { font-size: 56px; text-shadow: 0 0 12px #f5c542; }
 .reel.has-win { overflow: visible; }
-.sym.win { animation: winSway 1s ease-in-out infinite; z-index: 6; box-shadow: 0 0 0 4px var(--win), 0 0 26px var(--win); }
+.sym.win { animation: winSway 1s ease-in-out infinite; z-index: 6; box-shadow: 0 0 0 3px var(--win), 0 0 24px var(--win); }
+.sym.win .art { filter: drop-shadow(0 0 12px var(--win)) drop-shadow(0 0 4px #fff6c8); }
 /* Winning cards sway side to side: wide but slow (Josh, 2026-11-09). No scaling. */
 @keyframes winSway { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-7px) rotate(-2.5deg); }
   75% { transform: translateX(7px) rotate(2.5deg); } }
@@ -137,13 +162,12 @@ body.fs .fs-title { display: flex; }
 
 /* Win row */
 .win-box { margin-top: 16px; height: 72px; width: 520px; border-radius: 36px; background: rgba(0,0,0,.5); border: 2px solid rgba(245,197,66,.5);
-  display: flex; align-items: center; justify-content: center; gap: 16px; position: relative; }
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: 16px; position: relative; }
 .win-glow { position: absolute; left: 50%; top: 50%; width: 560px; height: 150px; border-radius: 50%; pointer-events: none; z-index: 0;
   background: radial-gradient(closest-side, rgba(255,240,170,.95), rgba(245,197,66,.55) 45%, rgba(245,197,66,0) 100%); mix-blend-mode: screen; }
 .win-box > .win-label, .win-box > .win-value { position: relative; z-index: 1; }
-.win-label { font-size: 22px; color: var(--muted); font-weight: 800; }
+.win-label { justify-self: end; font-size: 22px; color: var(--muted); font-weight: 800; }
 .win-value { font-size: 40px; font-weight: 900; color: var(--win); -webkit-text-stroke: 6px #1f0d00; paint-order: stroke fill; font-variant-numeric: tabular-nums; }
-.step-note { position: absolute; top: -34px; font-size: 26px; text-shadow: 0 2px 4px #000; color: var(--win); font-weight: 800; }
 
 /* Controls */
 .controls { margin-top: auto; height: 200px; width: 100%; display: flex; align-items: center; justify-content: space-evenly; padding: 0 12px; }
@@ -393,7 +417,7 @@ body.fs .fs-title { display: flex; }
 .seg-opt { height: 64px; border-radius: 16px; background: rgba(255,255,255,.08); font-size: 22px; font-weight: 800; }
 .seg-opt.on { background: var(--gold); color: #3b2300; }
 
-.mini-cell { width: 120px; height: 142px; zoom: .42; flex: none; }
+.mini-cell { width: var(--cell-w); height: var(--cell-h); zoom: .42; flex: none; }
 .mini-cell .sym { position: relative; left: 0; margin: 0; top: 0 !important; animation: none; }
 .mini-cell.inline { display: inline-block; vertical-align: middle; margin-right: 24px; }
 .rule { margin-bottom: 26px; }
@@ -453,3 +477,27 @@ body.fs .fs-title { display: flex; }
 .btn-cancel { background: linear-gradient(#e0566b, #9b1c31); box-shadow: 0 4px 0 #5e0f1c; }
 .btn-start { background: linear-gradient(#5fe08a, #17924a); box-shadow: 0 4px 0 #0b5a2c, 0 0 18px rgba(74,222,128,.45); }
 .btn-cancel:active, .btn-start:active { transform: translateY(3px); box-shadow: none; }
+
+/* Gold Frame Bank (feature 23): placeholder coin and pot, needs art first */
+.badge-coin, .fly-coin { display: grid; place-items: center; width: var(--badge-coin-size); height: var(--badge-coin-size); border-radius: 50%;
+  font-size: 18px; font-weight: 900; color: #3b2300; background: radial-gradient(circle at 35% 30%, #fff6c8, var(--gold) 55%, var(--gold2));
+  border: 2px solid #fff6c8; box-shadow: 0 2px 0 #6b4300, 0 0 10px rgba(245,197,66,.8); pointer-events: none; }
+.sym .badge-coin { position: absolute; top: 4px; right: 4px; z-index: 1; }
+.fly-coin { position: absolute; z-index: 4; }
+.bank-pot { position: absolute; right: 6px; top: 50%; z-index: 3; width: var(--bank-pot-width); height: 58px; margin-top: -29px; border-radius: 14px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; color: var(--gold);
+  background: linear-gradient(#4a2e00, #1f1200); border: 2px solid #fff6c8; box-shadow: 0 0 18px rgba(245,197,66,.8);
+  opacity: 0; pointer-events: none; transition-property: opacity; }
+.bank-pot.show { opacity: 1; }
+.bank-pot .bank-label { font-size: 14px; font-weight: 900; letter-spacing: 2px; }
+.bank-pot .bank-value { font-size: var(--bank-pot-value-size); font-weight: 900; color: #ffe38a; text-shadow: 0 0 10px #f5c542, 0 0 22px rgba(255,138,0,.8); }
+.mult-wrap.has-bank .mult-bar { padding: 0 calc(var(--bank-pot-width) + 14px); width: 100%; box-sizing: border-box; gap: 8px; }
+.mult-bar .step.with-bank { width: auto; min-width: 112px; padding: 0 10px; font-size: var(--mult-bank-step-size); white-space: nowrap;
+  animation: bank-step-glow 1.6s ease-in-out infinite alternate; }
+@keyframes bank-step-glow { from { box-shadow: 0 0 14px rgba(245,197,66,.7); } to { box-shadow: 0 0 30px rgba(255,190,40,1), 0 0 6px #fff6c8; } }
+/* Plain steps may shrink (84 down to 56px) so a lit "x10 + 25" and the pot still fit on one row */
+.mult-wrap.has-bank .mult-bar .step { width: 84px; flex: 0 1 84px; min-width: 56px; font-size: 28px; }
+.mult-wrap.has-bank .mult-bar .step.with-bank { width: auto; flex: none; font-size: var(--mult-bank-step-size); }
+/* Multiplier reveal: the flying x7 tag */
+.fly-mult { position: absolute; z-index: 5; font-size: var(--mult-tag-size); font-weight: 900; color: var(--gold); white-space: nowrap;
+  -webkit-text-stroke: 10px #1f0d00; paint-order: stroke fill; text-shadow: 0 0 24px rgba(245,197,66,.9), 0 3px 0 #6b4300; }

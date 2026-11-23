@@ -23,6 +23,7 @@ const bought = engine.playRound({ bet: 10, buyBonus: true });
 | `multipliers.ts` | Cascading multiplier variants A (ladder), B (endless), C (persistent in free spins), D (spots) |
 | `spinRunner.ts` | One spin: evaluate → pay → golden to wild → remove → refill → repeat |
 | `slotEngine.ts` | One round: base spin or buy, free spins, retriggers, max-win cap, debug force |
+| `goldBank.ts` | Gold Frame Bank (feature 23): `GoldBank` counter and its reset/carry rule, mode helpers, weighted badge pick. Off unless `goldBank.enabled` |
 | `overrides.ts` | Session-only overrides for the debug panel (never touches the original) |
 | `validateConfig.ts` | Clear errors for a broken `game.json` |
 
